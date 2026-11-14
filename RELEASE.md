@@ -42,5 +42,8 @@ release workflow. The plugin uses them too, so a package checked on Linux skips 
 
 ### Homebrew
 
-`brew install` for the command line tool, on macOS and Linux. Plan: a tap repository with a formula that installs
-the binary from the release archive, plus a checklist step that updates the formula's version and checksum.
+`brew install snagless` for the command line tool, on macOS and Linux, through homebrew-core. A core formula builds
+from source, and homebrew-core takes a repository once it is 30 days old and has 75 stars, 30 forks or 30 watchers
+(three times that when the owner submits it). If the repository qualifies by 1.0, submit the formula there. Until
+it does, a tap repository with a formula that installs the binary from the release archive covers it, plus a
+checklist step that updates the formula's version and checksum; the tap goes once homebrew-core takes the formula.
