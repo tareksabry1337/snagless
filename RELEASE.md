@@ -7,8 +7,7 @@ compiles swift-syntax. Once it holds the released bundle, the plugin uses the pr
 compile, which takes roughly 10 seconds off a clean build of each example project. Contributors who want the
 source build anyway set `SNAGLESS_FROM_SOURCE=1`.
 
-The bundle is macOS only: one universal binary for arm64 and x86_64. Linux binaries are on the roadmap for after
-the first release.
+The bundle is macOS only: one universal binary for arm64 and x86_64. Linux binaries come with 1.0.
 
 ## Checklist
 
@@ -32,3 +31,16 @@ the first release.
 `Package.swift` declares `swift-tools-version: 6.0`, so Xcode 16 is the lowest version that can read it. Before
 a release, run the checks with every Xcode on hand and update the compatibility table under Requirements in the
 README.
+
+## Planned for 1.0
+
+### Linux
+
+The command line tool runs on Linux CI runners as well as on Macs. Plan: add Linux x86_64 and aarch64 binaries,
+with the Swift standard library linked in statically, to the artifact bundle, built on Linux runners by the
+release workflow. The plugin uses them too, so a package checked on Linux skips the swift-syntax compile.
+
+### Homebrew
+
+`brew install` for the command line tool, on macOS and Linux. Plan: a tap repository with a formula that installs
+the binary from the release archive, plus a checklist step that updates the formula's version and checksum.

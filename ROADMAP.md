@@ -62,9 +62,3 @@ block is left out goes unreported. RuntimeCases `postfixIfOtherPlatform` crashes
 the only crash in RuntimeCases that Snagless misses. Plan: in pass 1, work out which branches are active for each
 build (Debug and Release on each of the target's platforms) and summarize each distinct set of branches; in pass
 2, check each one. An unknown condition gives a note.
-
-### Linux
-
-The prebuilt binary is macOS only, so a package checked on a Linux CI runner has to build Snagless and swift-syntax
-from source. Plan: add Linux x86_64 and aarch64 binaries, with the Swift standard library linked in statically, to
-the artifact bundle, built on Linux runners by the release workflow.
