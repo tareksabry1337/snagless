@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "indentation": {
+    "spaces": 4
+  },
+  "lineLength": 120,
+  "maximumBlankLines": 1,
+  "respectsExistingLineBreaks": true,
+  "lineBreakBeforeEachArgument": true,
+  "lineBreakBeforeEachGenericRequirement": true,
+  "lineBreakAroundMultilineExpressionChainComponents": true,
+  "lineBreakBetweenDeclarationAttributes": true,
+  "prioritizeKeepingFunctionOutputTogether": true,
+  "multiElementCollectionTrailingCommas": true,
+  "multilineTrailingCommaBehavior": "alwaysUsed",
+  "indentConditionalCompilationBlocks": false,
+  "rules": {
+    "AlwaysUseLiteralForEmptyCollectionInit": true,
+    "NeverForceUnwrap": true,
+    "NeverUseForceTry": true,
+    "NeverUseImplicitlyUnwrappedOptionals": true,
+    "NoEmptyLinesOpeningClosingBraces": true,
+    "NoLeadingUnderscores": true,
+    "OmitExplicitReturns": true,
+    "UseEarlyExits": true,
+    "UseWhereClausesInForLoops": true
+  }
+}

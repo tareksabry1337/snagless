@@ -1,0 +1,19 @@
+name: RuntimeCases
+options:
+  bundleIdPrefix: dev.snagless
+  deploymentTarget:
+    iOS: "18.0"
+settings:
+  GENERATE_INFOPLIST_FILE: YES
+  CODE_SIGNING_ALLOWED: NO
+  SWIFT_VERSION: "6.0"
+  SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
+targets:
+  RuntimeCases:
+    type: application
+    platform: iOS
+    sources:
+      - RuntimeCases
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: dev.snagless.runtime-cases
+      INFOPLIST_KEY_UILaunchScreen_Generation: YES

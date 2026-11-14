@@ -1,0 +1,31 @@
+name: XcodeDemo
+options:
+  bundleIdPrefix: dev.snagless
+  deploymentTarget:
+    macOS: "14.0"
+packages:
+  Snagless:
+    path: ../..
+  Shop:
+    path: ../Shop
+settings:
+  GENERATE_INFOPLIST_FILE: YES
+  CODE_SIGNING_ALLOWED: NO
+  SWIFT_VERSION: "6.0"
+targets:
+  ProfileKit:
+    type: framework
+    platform: macOS
+    sources:
+      - ../PluginDemo/Sources/Profile
+  XcodeDemo:
+    type: application
+    platform: macOS
+    sources:
+      - XcodeDemo
+    dependencies:
+      - target: ProfileKit
+      - package: Shop
+    buildToolPlugins:
+      - plugin: SnaglessPlugin
+        package: Snagless

@@ -1,0 +1,10 @@
+Snagless
+Copyright (c) 2026 Tarek Sabry. MIT License, see LICENSE.
+
+The way Snagless resolves type names from syntax alone (recording each reference with its lexical scope, then
+resolving it against declared types in the compiler's lookup order, and keying types by module) was informed by
+SafeDI, https://github.com/dfed/SafeDI, Copyright (c) 2023 Dan Federman, MIT License. No SafeDI source code is
+included.
+
+Snagless depends on swift-syntax, https://github.com/swiftlang/swift-syntax, Copyright (c) Apple Inc. and the
+Swift project authors, Apache License 2.0 with Runtime Library Exception.

@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: xcode-27
+    defaults:
+      run:
+        working-directory: snagless
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: snagless
+      - name: Xcode
+        run: sudo xcode-select --switch /Applications/Xcode_27.0.app/Contents/Developer
+      - name: Tools
+        run: brew install swiftlint xcodegen
+      - name: Lint
+        run: Scripts/lint.sh
+      - name: Tests
+        run: swift test -Xswiftc -warnings-as-errors
+      - name: Examples
+        run: Scripts/check-examples.sh
