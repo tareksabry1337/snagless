@@ -236,7 +236,7 @@ reason is the answer.
   closure, counts as a call to every overload with that name.
 - `Package.swift` is read as text, so targets built from variables or conditions are skipped.
 
-ROADMAP.md lists the ones being fixed next.
+ROADMAP.md lists the fixes planned for 1.0.
 
 ## Requirements
 
