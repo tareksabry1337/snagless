@@ -19,7 +19,7 @@ The bundle is macOS only: one universal binary for arm64 and x86_64. Linux binar
    NOTICE inside, and prints the binary's architectures, its size and the archive's checksum. It takes a few
    minutes.
 4. Point `releasedBinary` at the archive's release URL with the printed checksum:
-   `.binaryTarget(name: "SnaglessBinary", url: "https://github.com/OWNER/snagless/releases/download/VERSION/snagless.artifactbundle.zip", checksum: "CHECKSUM")`.
+   `.binaryTarget(name: "SnaglessBinary", url: "https://github.com/tareksabry1337/snagless/releases/download/VERSION/snagless.artifactbundle.zip", checksum: "CHECKSUM")`.
    The checksum covers only the archive, so it stays the same after this edit. Commit, and tag that commit with
    the version.
 5. Create the GitHub release for the tag and upload the archive, so the URL from step 4 works.
