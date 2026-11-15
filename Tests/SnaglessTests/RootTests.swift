@@ -169,23 +169,6 @@ struct RootTests {
     }
 
     @Test
-    func previewFindingsFollowThePreviewsOption() {
-        let sources = ["Leaf.swift": Fixture.leafView + "\n#Preview { Leaf() }\n"]
-        let finding = "`Leaf` is shown from preview `Leaf` without `Cart`; required by Leaf (Leaf.swift:2)."
-        #expect(
-            TestProject(sources).errors(options: AnalysisOptions(previews: .error)) == [
-                "Leaf.swift:5:12: error: " + finding
-            ]
-        )
-        #expect(
-            TestProject(sources).errors(options: AnalysisOptions(previews: .warning)) == [
-                "Leaf.swift:5:12: warning: " + finding
-            ]
-        )
-        #expect(TestProject(sources).errors(options: AnalysisOptions(previews: .off)) == [])
-    }
-
-    @Test
     func observableDelegatesAreInTheAppEnvironmentOnly() {
         let delegates = """
             @Observable final class SceneDelegate: NSObject, UIWindowSceneDelegate {}

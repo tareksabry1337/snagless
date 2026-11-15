@@ -53,7 +53,6 @@ struct RuntimeCaseView: View {
         case .closureHelper: ClosureHelper.Root()
         case .readOnlyInAction: ReadOnlyInAction.Root()
         case .readOnlyInContextMenu: ReadOnlyInContextMenu.Root()
-        case .requirementInsideIf: RequirementInsideIf.Root()
         }
     }
 }

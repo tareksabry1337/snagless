@@ -34,15 +34,26 @@ launch() {
 launch "$output/list" -list YES
 cases=$(tr -d '\r' <"$output/list" | grep -E '^[a-zA-Z]+$')
 
+differences=0
 for name in ${*:-$cases}; do
     launch "$output/$name" -case "$name"
     crash=$(tr -d '\r' <"$output/$name" | grep -m1 -o 'Fatal error: .*' || true)
     if [ -n "$crash" ]; then
-        printf '%s\tcrashed\t%s\n' "$name" "$crash"
+        result=crashed
     elif grep -q 'runtime-case: rendered' "$output/$name"; then
-        printf '%s\trendered\n' "$name"
+        result=rendered
     else
-        printf '%s\tno result\n' "$name"
+        result="no result"
+    fi
+    expected=$(awk -F'\t' -v name="$name" '$1 == name { print $2 }' expected.tsv)
+    printf '%s\t%s\t%s\n' "$name" "$result" "$crash"
+    if [ "$result" != "$expected" ]; then
+        printf '    expected %s in expected.tsv\n' "${expected:-a row}"
+        differences=$((differences + 1))
     fi
 done
 xcrun simctl terminate "$device" "$bundle" 2>/dev/null || true
+if [ "$differences" -gt 0 ]; then
+    echo "$differences case(s) differ from expected.tsv"
+    exit 1
+fi

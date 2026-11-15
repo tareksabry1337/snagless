@@ -50,9 +50,9 @@ Snagless only reads your source code, which keeps it quick: a 431-file app takes
 
 ## How well it works
 
-**Against SwiftUI itself.** RuntimeCases is a small app with 49 cases, each built around one way of showing a view
-or providing a value, and each run on the iOS 27 simulator to see whether it crashes. 30 crash and 19 render.
-Snagless reports 29 of the 30 crashes; the one it misses is a value provided inside an `#if` (see "Limits"). Of
+**Against SwiftUI itself.** RuntimeCases is a small app with 48 cases, each built around one way of showing a view
+or providing a value, and each run on the iOS 27 simulator to see whether it crashes. 29 crash and 19 render.
+Snagless reports 28 of the 29 crashes; the one it misses is a value provided inside an `#if` (see "Limits"). Of
 the 19 that render it stays quiet on 12 and reports 7:
 
 - 2 show the same view as a case that crashes, with only a runtime flag deciding whether the value is provided, so

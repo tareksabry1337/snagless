@@ -19,22 +19,6 @@ private final class WorkQueue: @unchecked Sendable {
     }
 }
 
-private final class Slots<Element: Sendable>: @unchecked Sendable {
-    let buffer: UnsafeMutablePointer<Element?>
-    let count: Int
-
-    init(count: Int) {
-        self.count = count
-        buffer = .allocate(capacity: count)
-        buffer.initialize(repeating: nil, count: count)
-    }
-
-    deinit {
-        buffer.deinitialize(count: count)
-        buffer.deallocate()
-    }
-}
-
 private final class SharedElements<Element: Sendable>: @unchecked Sendable {
     let base: UnsafeMutablePointer<Element>
 
@@ -50,11 +34,14 @@ package enum Workers {
         count: Int,
         _ transform: @escaping @Sendable (Int) -> Element,
     ) -> [Element] {
-        let slots = Slots<Element>(count: count)
-        forEach(count: count) { index in
-            slots.buffer[index] = transform(index)
+        Array(unsafeUninitializedCapacity: count) { buffer, initializedCount in
+            guard let base = buffer.baseAddress else { return }
+            let shared = SharedElements(base)
+            forEach(count: count) { index in
+                (shared.base + index).initialize(to: transform(index))
+            }
+            initializedCount = count
         }
-        return (0..<count).compactMap { slots.buffer[$0] }
     }
 
     package static func replace<Element: Sendable>(

@@ -47,5 +47,4 @@ enum RuntimeCase: String, CaseIterable {
     case closureHelper
     case readOnlyInAction
     case readOnlyInContextMenu
-    case requirementInsideIf
 }

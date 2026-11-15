@@ -6,7 +6,7 @@ struct NavigationDestinationTests {
         let name: String
         let root: String
         let declarer: String
-        let crashes: Bool
+        let crashPath: String?
 
         var testDescription: String { name }
     }
@@ -18,38 +18,38 @@ struct NavigationDestinationTests {
             name: "provided on the stack",
             root: "NavigationStack { Declarer() }.environment(Cart.shared)",
             declarer: destination,
-            crashes: false,
+            crashPath: nil,
         ),
         Layout(
             name: "provided between the stack and the declaring view",
             root: "NavigationStack { Declarer().environment(Cart.shared) }",
             declarer: destination,
-            crashes: true,
+            crashPath: "Root → Declarer → Leaf",
         ),
         Layout(
             name: "provided on the declaring view after the modifier",
             root: "NavigationStack { Declarer() }",
             declarer: destination + ".environment(Cart.shared)",
-            crashes: true,
+            crashPath: "Root → Declarer → Leaf",
         ),
         Layout(
             name: "provided inside the destination",
             root: "NavigationStack { Declarer() }",
             declarer:
                 "Text(\"x\").navigationDestination(isPresented: .constant(true)) { Leaf().environment(Cart.shared) }",
-            crashes: false,
+            crashPath: nil,
         ),
         Layout(
             name: "stack and destination in one body, provided on the stack",
             root: "NavigationStack { \(destination) }.environment(Cart.shared)",
             declarer: "Text(\"unused\")",
-            crashes: false,
+            crashPath: nil,
         ),
         Layout(
             name: "stack and destination in one body, provided between",
             root: "NavigationStack { \(destination).environment(Cart.shared) }",
             declarer: "Text(\"unused\")",
-            crashes: true,
+            crashPath: "Root → Leaf",
         ),
     ]
 
@@ -63,27 +63,7 @@ struct NavigationDestinationTests {
             "Cart.swift": Fixture.cart,
         ])
         .errors()
-        #expect(errors.count == (layout.crashes ? 1 : 0))
-        #expect(errors.allSatisfy { $0.hasSuffix(Self.destinationNote) })
-    }
-
-    @Test
-    func witnessNamesTheDeclaringViewAndExplainsTheStack() {
-        let errors = TestProject([
-            "App.swift": Fixture.app(showing: "Root()"),
-            "Root.swift":
-                "struct Root: View { var body: some View { NavigationStack { Declarer().environment(Cart.shared) } } }",
-            "Declarer.swift": "struct Declarer: View { var body: some View { \(Self.destination) } }",
-            "Leaf.swift": Fixture.leafView,
-            "Cart.swift": Fixture.cart,
-        ])
-        .errors()
-        #expect(
-            errors == [
-                "App.swift:1:64: error: `Root` is shown from App `MyApp` without `Cart`; required by Root → Declarer → Leaf"
-                    + " (Leaf.swift:2)." + Self.destinationNote
-            ]
-        )
+        #expect(errors == layout.crashPath.map { [Self.missingCart(shown: "Root", path: $0)] } ?? [])
     }
 
     @Test
@@ -99,10 +79,12 @@ struct NavigationDestinationTests {
         )
         let providedInBetween = TestProject(base.merging(["App.swift": Fixture.app(showing: "Middle()")]) { $1 })
         #expect(providedAtTheRoot.errors() == [])
-        #expect(providedInBetween.errors().count == 1)
+        #expect(providedInBetween.errors() == [Self.missingCart(shown: "Middle", path: "Middle → Declarer → Leaf")])
     }
 
-    static let destinationNote =
-        " A navigationDestination gets the environment of its NavigationStack;"
-        + " provide the value on the stack or inside the destination."
+    private static func missingCart(shown: String, path: String) -> String {
+        "App.swift:1:64: error: `\(shown)` is shown from App `MyApp` without `Cart`; required by \(path) (Leaf.swift:2)."
+            + " A navigationDestination gets the environment of its NavigationStack;"
+            + " provide the value on the stack or inside the destination."
+    }
 }

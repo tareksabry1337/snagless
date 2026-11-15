@@ -35,7 +35,7 @@ def bench(binary, target, runs):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--binary", required=True)
-    parser.add_argument("--runs", type=int, default=5)
+    parser.add_argument("--runs", type=int, default=7)
     parser.add_argument("targets", nargs="+")
     args = parser.parse_args()
     print(json.dumps([bench(args.binary, target, args.runs) for target in args.targets], indent=1))

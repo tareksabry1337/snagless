@@ -10,7 +10,8 @@ helps too.
 
 The checker is four modules, and each one may only use the ones listed before it:
 
-- `SnaglessModel` holds the summary types that pass 1 writes and pass 2 reads (`FileSummary` and everything in it).
+- `SnaglessModel` holds the summary types that pass 1 writes and pass 2 reads (`FileSummary` and everything in it),
+  and `Workers`, which both passes use to spread work across threads with large stacks.
 - `SnaglessSyntax` is pass 1. `Summarizer` reads each file on its own into a `FileSummary`. `PackageManifest` reads
   a `Package.swift` as text. It is the only module that uses SwiftSyntax.
 - `SnaglessAnalysis` is pass 2. It resolves type names across all files (`TypeResolver`, `FileReferenceResolver`),
@@ -44,18 +45,23 @@ target's own files.
 - Run `swift test -Xswiftc -warnings-as-errors`. Besides the tests for each rule, it generates apps with crashes
   added at random and checks that exactly those are found, checks that output is the same in any file order, and
   checks the sources for calls that crash on purpose (`fatalError`, `precondition` and similar),
-  top-level functions and variables, and a few banned words in names.
+  top-level functions and variables, and a few banned words in names. The generated apps need `python3`.
 - Fix every warning. Every target is built in Swift 6 language mode, and CI treats warnings as errors with the flag
   above.
 - Keep the manifests (`Package.swift` and the examples') free of trailing commas before a closing parenthesis, so
   Swift 6.0 can read them. `Scripts/lint.sh` checks for them.
 - If the change is about how SwiftUI behaves, add a case to RuntimeCases, an app with one case per behaviour, and
-  run it: `RuntimeCases/run.sh [case...]` builds the app (it needs xcodegen), runs each case on a booted simulator
-  (or the one in `DEVICE`) and prints whether it rendered or crashed.
+  a row to `RuntimeCases/expected.tsv` saying whether it crashes and whether Snagless reports it. Then run it:
+  `RuntimeCases/run.sh [case...]` builds the app (it needs xcodegen), runs each case on a booted simulator (or the
+  one in `DEVICE`), prints whether it rendered or crashed, and fails when a result differs from the table.
+  `RuntimeCasesTests` checks the Snagless column on every test run.
 - Keep the IceCubesApp results the same unless the change means to change them. Clone
   https://github.com/Dimillian/IceCubesApp at commit 98098b9 into `realapps/`, run a release build of the previous
   commit and of your change on it, and compare the output. It reports 39 errors, 86 with `--legacy-sheets` and 2
   with `--previews off`.
+- If the change could affect speed, time a release build before and after with
+  `Scripts/bench.py --binary .build/release/snagless FOLDER...`. It prints the median of seven runs of each step for
+  every folder; the speed numbers in the README come from it.
 
 CI runs the lint, the tests and `Scripts/check-examples.sh`. The script builds both example projects, which leave
 out `Cart` on purpose and must fail on it, then adds a missing value in another target and in a local package, and
