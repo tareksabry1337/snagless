@@ -58,10 +58,9 @@ private struct CheckCommand {
 
     private var inputFiles: [URL] {
         let graphFiles = graph.targets.flatMap(\.files).map { URL(filePath: $0) }
-        let manifests = packages.map { $0.appending(path: "Package.swift") }
-        let scanned = (directories + packages.map { $0.appending(path: "Sources") }).flatMap(Self.swiftFiles(under:))
+        let scanned = (directories + packages).flatMap(Self.swiftFiles(under:))
         var seen: Set<String> = []
-        return (graphFiles + manifests + scanned).filter { seen.insert($0.standardizedFileURL.path).inserted }
+        return (graphFiles + scanned).filter { seen.insert($0.standardizedFileURL.path).inserted }
     }
 
     private static func swiftFiles(under directory: URL) -> [URL] {
@@ -124,6 +123,12 @@ extension SnaglessPlugin: XcodeBuildToolPlugin {
     }
 }
 
+private struct UnreadableProject: Error, CustomStringConvertible {
+    let path: String
+
+    var description: String { "Snagless cannot find the objects in \(path)" }
+}
+
 private enum ProjectFile {
     static func localPackages(in projectFile: URL, relativeTo projectDirectory: URL) throws -> [URL] {
         try relativePaths(in: projectFile).map { projectDirectory.appending(path: $0).standardizedFileURL }
@@ -138,7 +143,9 @@ private enum ProjectFile {
         }
         let propertyList = projectFile.appending(path: "project.pbxproj")
         let root = try PropertyListSerialization.propertyList(from: Data(contentsOf: propertyList), format: nil)
-        let objects = (root as? [String: Any])?["objects"] as? [String: [String: Any]] ?? [:]
+        guard let objects = (root as? [String: Any])?["objects"] as? [String: [String: Any]] else {
+            throw UnreadableProject(path: propertyList.path(percentEncoded: false))
+        }
         return objects.values
             .filter { $0["isa"] as? String == "XCLocalSwiftPackageReference" }
             .compactMap { $0["relativePath"] as? String }
