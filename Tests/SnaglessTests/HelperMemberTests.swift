@@ -26,6 +26,25 @@ struct HelperMemberTests {
         )
     }
 
+    @Test(arguments: ["self._row", "self._row()"])
+    func underscoredHelpersAreMembers(content: String) {
+        let row = """
+            struct Row: View {
+                var body: some View { \(content) }
+                var _row: some View { Leaf() }
+                func _row() -> some View { Leaf() }
+            }
+            """
+        let path = content.hasSuffix("()") ? "Row._row()" : "Row._row"
+        #expect(
+            TestProject(["App.swift": Fixture.app(showing: "Row()"), "Row.swift": row, "Leaf.swift": Fixture.leafView])
+                .errors() == [
+                    "App.swift:1:64: error: `Row` is shown from App `MyApp` without `Cart`; "
+                        + "required by Row → \(path) → Leaf (Leaf.swift:2)."
+                ]
+        )
+    }
+
     @Test
     func helperPropertiesInExtensionsAreChildren() {
         let row = "struct Row: View { var body: some View { header } }"

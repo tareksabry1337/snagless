@@ -15,7 +15,7 @@ extension Summarizer {
             )
             return
         }
-        if let first = name.first, first.isLowercase {
+        if !name.isTypeName {
             let receiver =
                 staticType(base, scope: scope).map(ValueReference.type) ?? valueReference(base, scope: scope)
             addEdge(
@@ -48,7 +48,7 @@ extension Summarizer {
         }
         if let access = callee.as(MemberAccessExprSyntax.self), let base = access.base {
             let name = access.declName.baseName.text
-            if !name.startsWithUppercase, name != "init" {
+            if !name.isTypeName, name != "init" {
                 guard let type = staticType(base, scope: scope) else {
                     visitModifier(call, name: access.declName, base: base, provided: provided, scope: argumentScope)
                     return
@@ -64,7 +64,7 @@ extension Summarizer {
                 return
             }
         }
-        if let reference = callee.as(DeclReferenceExprSyntax.self), !reference.baseName.text.startsWithUppercase {
+        if let reference = callee.as(DeclReferenceExprSyntax.self), !reference.baseName.text.isTypeName {
             visitModifier(call, name: reference, base: nil, provided: provided, scope: argumentScope)
             return
         }
@@ -190,7 +190,7 @@ extension Summarizer {
             current = current.unwrapped
             if let call = current.as(FunctionCallExprSyntax.self) {
                 if let reference = call.calledExpression.as(DeclReferenceExprSyntax.self) {
-                    return !reference.baseName.text.startsWithUppercase
+                    return !reference.baseName.text.isTypeName
                 }
                 guard let access = call.calledExpression.as(MemberAccessExprSyntax.self), let next = access.base else {
                     return false

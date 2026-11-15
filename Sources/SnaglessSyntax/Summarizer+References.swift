@@ -122,7 +122,7 @@ extension Summarizer {
     }
 
     func isMemberName(_ name: String, scope: Scope) -> Bool {
-        name.first?.isLowercase == true && scope.locals[name] == nil
+        !name.isTypeName && scope.locals[name] == nil
     }
 
     private func enclosingType(_ scope: Scope) -> TypeName? {

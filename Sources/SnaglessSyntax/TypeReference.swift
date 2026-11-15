@@ -37,10 +37,10 @@ enum TypeReference {
         switch expression.as(ExprSyntaxEnum.self) {
         case .declReferenceExpr(let reference):
             let name = reference.baseName.text
-            return name.first?.isUppercase == true ? name : nil
+            return name.isTypeName ? name : nil
         case .memberAccessExpr(let access):
             let name = access.declName.baseName.text
-            guard name.first?.isUppercase == true, let base = access.base, let basePath = path(of: base) else {
+            guard name.isTypeName, let base = access.base, let basePath = path(of: base) else {
                 return nil
             }
             return basePath + "." + name

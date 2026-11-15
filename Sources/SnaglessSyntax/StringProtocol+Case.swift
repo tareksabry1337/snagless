@@ -1,6 +1,5 @@
 extension StringProtocol {
-    var startsWithUppercase: Bool {
-        guard let first else { return false }
-        return first.isUppercase
+    var isTypeName: Bool {
+        drop { $0 == "_" }.first?.isUppercase == true
     }
 }
