@@ -17,7 +17,7 @@ struct SourceFileTests {
             sources["Deep\(index).swift"] = "struct Deep\(index): View { var body: some View { \(nested(1000)) } }"
         }
         try FileManager.default.write(sources, under: root)
-        let files = SummaryBatch(SourceFile.list([root.path])).files
+        let files = try SummaryBatch(SourceFile.list([root.path])).files
         let readable = files.filter { !$0.file.path.hasSuffix("TooDeep.swift") }
         #expect(readable.count == 8)
         for file in readable {
@@ -80,9 +80,9 @@ struct SourceFileTests {
         #expect(fromGraph.map(\.module) == ["App", "App", "Other"])
         let byFolder = SourceFile.list([root.path])
         #expect(byFolder.map(\.module) == ["Views", "Views", "Views"])
-        #expect(TestProject(files: SummaryBatch(fromGraph).files).errors() == [])
+        #expect(TestProject(files: try SummaryBatch(fromGraph).files).errors() == [])
         #expect(
-            TestProject(files: SummaryBatch(byFolder).files).errors() == [
+            TestProject(files: try SummaryBatch(byFolder).files).errors() == [
                 "\(file("App.swift")):1:64: error: `Detail` is shown from App `MyApp` without `Cart`; "
                     + "required by Detail (\(file("OtherDetail.swift")):1)."
             ]

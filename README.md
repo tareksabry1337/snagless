@@ -172,7 +172,7 @@ swift build -c release
 ```
 
 It exits with 0 when the run is clean or has only warnings, 1 when it finds an error, and 2 when the arguments are
-wrong.
+wrong, a path is missing, or a file can't be read as UTF-8 text.
 
 - `--package DIR` checks a local Swift package, using the module names from its `Package.swift`, along with the
   local packages it depends on. Repeat it for more packages. Plain folders get module names from their layout.

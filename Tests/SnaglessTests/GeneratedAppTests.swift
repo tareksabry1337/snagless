@@ -74,7 +74,7 @@ struct GeneratedAppTests {
     func everyAddedViolationIsReportedAndNothingElse(views: Int, seed: Int) throws {
         let generated = try GeneratedApp(views: views, seed: seed)
         defer { generated.remove() }
-        let analysis = Analysis(SummaryBatch(generated.sources).files, options: AnalysisOptions())
+        let analysis = Analysis(try SummaryBatch(generated.sources).files, options: AnalysisOptions())
         #expect(generated.reportedViolations(analysis) == (try generated.expectedViolations()))
     }
 
@@ -93,7 +93,7 @@ struct GeneratedAppTests {
             "Two": ["Extra/Sources/Two/Orphan.swift": orphan],
         ])
         .files
-        let files = SummaryBatch(generated.sources).files + extras
+        let files = try SummaryBatch(generated.sources).files + extras
         let interleaved = files.indices.sorted { ($0 % 2, $0) < ($1 % 2, $1) }.map { files[$0] }
         let reports = [files, files.reversed(), interleaved]
             .map { ordered in

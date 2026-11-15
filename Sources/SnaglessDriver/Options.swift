@@ -24,7 +24,7 @@ struct Options {
         AnalysisOptions(previews: previews, legacySheets: legacySheets)
     }
 
-    init(parsing arguments: [String]) throws {
+    init(parsing arguments: [String]) throws(UsageError) {
         var previews = PreviewMode.error
         var legacySheets = false
         var timing = false
@@ -70,7 +70,10 @@ struct Options {
         self.paths = paths
     }
 
-    private static func value(after flag: String, from iterator: inout IndexingIterator<[String]>) throws -> String {
+    private static func value(
+        after flag: String,
+        from iterator: inout IndexingIterator<[String]>,
+    ) throws(UsageError) -> String {
         guard let next = iterator.next() else { throw UsageError(message: "\(flag) needs a value") }
         return next
     }

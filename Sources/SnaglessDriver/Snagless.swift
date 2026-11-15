@@ -11,34 +11,47 @@ public enum Snagless {
             return 0
         }
         do {
-            return run(try Options(parsing: arguments))
-        } catch let error as UsageError {
-            FileHandle.standardError.write(Data((error.message + "\n").utf8))
-            return 2
+            return try run(try Options(parsing: arguments))
         } catch {
+            FileHandle.standardError.write(Data((error.message + "\n").utf8))
             return 2
         }
     }
 
-    private static func run(_ options: Options) -> Int32 {
+    private static func checkInputsExist(_ options: Options) throws(UsageError) {
+        for path in options.paths where !FileManager.default.fileExists(atPath: path) {
+            throw UsageError(message: "no such file or directory: \(path)")
+        }
+        for package in options.packages {
+            let manifest = URL(fileURLWithPath: package).appendingPathComponent("Package.swift").path
+            guard FileManager.default.fileExists(atPath: manifest) else {
+                throw UsageError(message: "no Package.swift in \(package)")
+            }
+        }
+    }
+
+    private static func run(_ options: Options) throws(UsageError) -> Int32 {
         let clock = ContinuousClock()
         let start = clock.now
+        try checkInputsExist(options)
         var fromGraph: [SourceFile] = []
         if let graphPath = options.targetGraph {
             do {
                 fromGraph = try SourceFile.list(targetGraph: graphPath)
             } catch {
-                FileHandle.standardError.write(
-                    Data("snagless: cannot read target graph \(graphPath): \(error)\n".utf8)
-                )
-                return 2
+                throw UsageError(message: "cannot read target graph \(graphPath): \(error)")
             }
         }
         let files = firstOfEachPath(
             fromGraph + SourceFile.list(packages: options.packages) + SourceFile.list(options.paths)
         )
         let listed = clock.now
-        let batch = SummaryBatch(files)
+        let batch: SummaryBatch
+        do {
+            batch = try SummaryBatch(files)
+        } catch {
+            throw UsageError(message: error.paths.map { "cannot read \($0) as UTF-8 text" }.joined(separator: "\n"))
+        }
         let summarized = clock.now
         let analysis = Analysis((consume batch).files, options: options.analysis)
         let analyzed = clock.now

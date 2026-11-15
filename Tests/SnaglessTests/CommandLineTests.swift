@@ -33,6 +33,22 @@ struct CommandLineTests {
     }
 
     @Test
+    func missingOrUnreadableInputIsAUsageError() throws {
+        let directory = try FileManager.default.makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try FileManager.default.write(["Sources/App/Leaf.swift": Fixture.leafView], under: directory)
+        let missing = directory.appendingPathComponent("Missing").path
+        #expect(Snagless.main(arguments: [missing]) == 2)
+        #expect(Snagless.main(arguments: ["--package", directory.path]) == 2)
+
+        let latin1 = directory.appendingPathComponent("Sources/App/Latin1.swift")
+        try Data([0x2F, 0x2F, 0x20, 0xE9, 0xFF, 0x0A]).write(to: latin1)
+        #expect(Snagless.main(arguments: [directory.path]) == 2)
+        try FileManager.default.removeItem(at: latin1)
+        #expect(Snagless.main(arguments: [directory.path]) == 0)
+    }
+
+    @Test
     func summaryLineCountsInSingularAndPlural() {
         let project = TestProject([
             "App.swift": "@main struct MyApp: App { var body: some Scene { WindowGroup { Leaf() } } }",

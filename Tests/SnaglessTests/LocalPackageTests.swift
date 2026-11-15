@@ -68,7 +68,7 @@ struct LocalPackageTests {
         )
         let files = SourceFile.list([path("App")]) + packages
         #expect(
-            TestProject(files: SummaryBatch(files).files).errors() == [
+            TestProject(files: try SummaryBatch(files).files).errors() == [
                 "\(path("App/App.swift")):2:64: error: `Badge` is shown from App `MyApp` without `Cart`; "
                     + "required by Badge → Leaf (\(path("Core/Sources/Core/Leaf.swift")):2)."
             ]
