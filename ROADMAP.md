@@ -18,8 +18,7 @@ build (Debug and Release on each of the target's platforms) and summarize each d
 
 ## 2. Sheets and the deployment target
 
-`--legacy-sheets` has to be passed by hand. Developers report that sheets inherit the environment reliably from
-iOS 15 on. Plan: read the deployment target from `Package.swift` (`platforms:`) or the project file and turn the
+`--legacy-sheets` has to be passed by hand; the README's command line section says which apps need it. Plan: read the deployment target from `Package.swift` (`platforms:`) or the project file and turn the
 flag on below iOS 15, with the flag kept as an override.
 
 ## 3. How much was checked

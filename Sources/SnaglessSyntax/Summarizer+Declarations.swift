@@ -6,7 +6,7 @@ extension Summarizer {
         var scope = typeScope(
             name: decl.name.text,
             members: decl.memberBlock,
-            generics: decl.genericParameterClause,
+            generics: decl.genericParameterNames,
             outer: outer,
         )
         let type = TypeName(path: scope.chain[0])
@@ -17,33 +17,40 @@ extension Summarizer {
         let isView = conforms(to: SwiftUIAPI.viewConformances)
         declareType(type, kind: .value, inherited: inherited, members: decl.memberBlock, scope: scope, isView: isView)
         let location = location(of: decl.name)
-        if conforms(to: ["App"]) {
-            scope.sink = .root(appendRoot(RootSummary(origin: .app(type), scope: scope.lexical, location: location)))
-        } else if conforms(to: ["PreviewProvider"]) {
-            let root = RootSummary(origin: .preview(title: type.path), scope: scope.lexical, location: location)
-            scope.sink = .root(appendRoot(root))
+        let rootOrigin: RootOrigin? =
+            if conforms(to: ["App"]) {
+                .app(type)
+            } else if conforms(to: ["PreviewProvider"]) {
+                .preview(title: type.path)
+            } else if conforms(to: ["Widget"]) {
+                .widget(name: type.path)
+            } else {
+                nil
+            }
+        if let rootOrigin {
+            scope.sink = .root(appendRoot(RootSummary(origin: rootOrigin, scope: scope.lexical, location: location)))
         } else if isView {
-            summary.nodes.append(
-                NodeSummary(
-                    name: .type(type),
-                    isViewModifier: conforms(to: ["ViewModifier"]),
-                    scope: scope.lexical,
-                    location: location,
-                    requirements: requirements(decl.memberBlock, scope: scope),
-                )
+            let node = NodeSummary(
+                name: .type(type),
+                isViewModifier: conforms(to: ["ViewModifier"]),
+                scope: scope.lexical,
+                location: location,
+                requirements: requirements(decl.memberBlock, scope: scope),
             )
-            scope.sink = .node(summary.nodes.count - 1)
+            scope.sink = .node(appendNode(node))
             scope.memberOwner = type
             scope.ownerIsView = true
             scope.ownerMakesControllers = conforms(to: SwiftUIAPI.controllerRepresentables)
             scope.slotNames = contentSlotNames(decl)
-        } else if conforms(to: ["Widget"]) {
-            let root = RootSummary(origin: .widget(name: type.path), scope: scope.lexical, location: location)
-            scope.sink = .root(appendRoot(root))
         } else {
             scope.memberOwner = type
         }
         summarizeMembers(decl.memberBlock, scope: scope)
+    }
+
+    func appendNode(_ node: NodeSummary) -> Int {
+        summary.nodes.append(node)
+        return summary.nodes.count - 1
     }
 
     func visitPlainType(
@@ -54,7 +61,7 @@ extension Summarizer {
         var scope = typeScope(
             name: decl.name.text,
             members: decl.memberBlock,
-            generics: decl.genericParameterClause,
+            generics: decl.genericParameterNames,
             outer: outer,
         )
         let type = TypeName(path: scope.chain[0])
@@ -69,7 +76,7 @@ extension Summarizer {
     }
 
     func visitProtocol(_ decl: ProtocolDeclSyntax, outer: Scope) {
-        let scope = typeScope(name: decl.name.text, members: decl.memberBlock, generics: nil, outer: outer)
+        let scope = typeScope(name: decl.name.text, members: decl.memberBlock, generics: [], outer: outer)
         var requirements: [String] = []
         for member in decl.memberBlock.membersInEveryBranch {
             if let function = member.decl.as(FunctionDeclSyntax.self) {
@@ -119,13 +126,13 @@ extension Summarizer {
     private func typeScope(
         name: String,
         members: MemberBlockSyntax,
-        generics: GenericParameterClauseSyntax?,
+        generics: [String],
         outer: Scope,
     ) -> Scope {
         var scope = Scope(ownerName: name)
         scope.chain = [outer.chain.first.map { $0 + "." + name } ?? name] + outer.chain
         scope.lexical = register(scope.chain)
-        scope.generics = outer.generics.union(generics?.parameters.map(\.name.text) ?? [])
+        scope.generics = outer.generics.union(generics)
         scope.properties = propertyTable(members, scope: scope)
         return scope
     }
@@ -179,7 +186,7 @@ extension Summarizer {
     }
 
     private func contentSlotNames(_ decl: StructDeclSyntax) -> Set<String> {
-        let generics = Set(decl.genericParameterClause?.parameters.map(\.name.text) ?? [])
+        let generics = Set(decl.genericParameterNames)
         var names: Set<String> = []
         for member in decl.memberBlock.membersInEveryBranch {
             guard let variable = member.decl.as(VariableDeclSyntax.self) else { continue }
@@ -216,10 +223,9 @@ extension Summarizer {
 
     private func subscriptKeyType(_ node: Syntax, scope: Scope) -> TypeName? {
         if let subscriptCall = node.as(SubscriptCallExprSyntax.self), subscriptCall.calledExpression.isSelf,
-            let argument = subscriptCall.arguments.first?.expression.as(MemberAccessExprSyntax.self),
-            argument.declName.baseName.text == "self", let base = argument.base
+            let key = metatypeName(subscriptCall.arguments.first?.expression, scope: scope)
         {
-            return staticType(base, scope: scope)
+            return key
         }
         for child in node.children(viewMode: .sourceAccurate) {
             if let found = subscriptKeyType(child, scope: scope) {
@@ -235,17 +241,15 @@ extension Summarizer {
                 summarize(Syntax(member.decl), provided: [], scope: scope)
                 continue
             }
-            summary.nodes.append(
-                NodeSummary(
-                    name: .extensionFunction(function.name.text),
-                    isViewModifier: false,
-                    scope: scope.lexical,
-                    location: location(of: function.name),
-                    requirements: [],
-                )
+            let node = NodeSummary(
+                name: .extensionFunction(function.name.text),
+                isViewModifier: false,
+                scope: scope.lexical,
+                location: location(of: function.name),
+                requirements: [],
             )
             var functionScope = scope
-            functionScope.sink = .node(summary.nodes.count - 1)
+            functionScope.sink = .node(appendNode(node))
             functionScope.ownerName = function.name.text
             summarize(Syntax(function), provided: [], scope: functionScope)
         }
@@ -270,16 +274,14 @@ extension Summarizer {
                 let helper = helperName(member.decl, viewReturningOnly: !scope.ownerIsView),
                 helper.base != "body"
             {
-                summary.nodes.append(
-                    NodeSummary(
-                        name: .member(owner: owner, name: helper),
-                        isViewModifier: false,
-                        scope: scope.lexical,
-                        location: location(of: member.decl),
-                        requirements: [],
-                    )
+                let node = NodeSummary(
+                    name: .member(owner: owner, name: helper),
+                    isViewModifier: false,
+                    scope: scope.lexical,
+                    location: location(of: member.decl),
+                    requirements: [],
                 )
-                memberScope.sink = .node(summary.nodes.count - 1)
+                memberScope.sink = .node(appendNode(node))
             }
             summarize(decl, provided: [], scope: memberScope)
         }

@@ -1,4 +1,4 @@
-package struct KeyUse: Hashable {
+package struct KeyUse {
     package enum Kind {
         case read
         case write

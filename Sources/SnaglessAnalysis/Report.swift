@@ -12,11 +12,13 @@ package struct Report {
         }
         var lines: [String] = []
         for site in analysis.unresolved.sorted(by: Self.outputOrder) {
-            let location = site.injection.location
-            lines.append(
-                "\(site.path):\(location.line):\(location.column): note: unresolved injection "
-                    + "`\(site.injection.text)`; add `// snagless: provides Type` if it provides a checked type\n"
+            let note = DiagnosticNote(
+                path: site.path,
+                location: site.injection.location,
+                message: "unresolved injection `\(site.injection.text)`; "
+                    + "add `// snagless: provides Type` if it provides a checked type",
             )
+            lines.append(note.rendered + "\n")
         }
         for view in analysis.unreachableViews.sorted(by: Self.outputOrder) {
             lines.append("\(view.path): note: `\(view.name)` is unreachable from every App, preview and hosting root\n")

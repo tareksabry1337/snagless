@@ -10,6 +10,14 @@ extension Summarizer {
         TypeReference.path(of: expression).flatMap { scoped($0, scope: scope) }
     }
 
+    func declaredValue(_ type: TypeSyntax?, scope: Scope) -> ValueReference? {
+        type.flatMap { reference($0, scope: scope) }.map(ValueReference.type)
+    }
+
+    func declaredOrInitialValue(_ type: TypeSyntax?, initializer: ExprSyntax?, scope: Scope) -> ValueReference? {
+        declaredValue(type, scope: scope) ?? initializer.flatMap { valueReference($0, scope: scope) }
+    }
+
     func scoped(_ path: String, scope: Scope) -> TypeName? {
         let head = path.prefix { $0 != "." }
         if scope.generics.contains(String(head)) {
@@ -134,7 +142,7 @@ extension Summarizer {
             return nil
         }
         var functionScope = scope
-        functionScope.generics.formUnion(function.genericParameterClause?.parameters.map(\.name.text) ?? [])
+        functionScope.generics.formUnion(function.genericParameterNames)
         return reference(returnType, scope: functionScope)
     }
 
@@ -192,9 +200,12 @@ extension Summarizer {
     }
 
     private func environmentAttributeType(_ attribute: AttributeSyntax, scope: Scope) -> TypeName? {
-        guard case .argumentList(let arguments) = attribute.arguments,
-            let access = arguments.first?.expression.as(MemberAccessExprSyntax.self),
-            access.declName.baseName.text == "self",
+        guard case .argumentList(let arguments) = attribute.arguments else { return nil }
+        return metatypeName(arguments.first?.expression, scope: scope)
+    }
+
+    func metatypeName(_ expression: ExprSyntax?, scope: Scope) -> TypeName? {
+        guard let access = expression?.as(MemberAccessExprSyntax.self), access.declName.baseName.text == "self",
             let base = access.base
         else { return nil }
         return staticType(base, scope: scope)
@@ -206,9 +217,7 @@ extension Summarizer {
     }
 
     func recordDelegate(fromSelfExpression expression: ExprSyntax, scope: Scope) {
-        guard let access = expression.as(MemberAccessExprSyntax.self), access.declName.baseName.text == "self",
-            let base = access.base, let type = staticType(base, scope: scope)
-        else { return }
+        guard let type = metatypeName(expression, scope: scope) else { return }
         summary.delegateTypes.append(ScopedType(type: type, scope: scope.lexical))
     }
 

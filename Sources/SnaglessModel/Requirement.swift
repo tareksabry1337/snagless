@@ -1,4 +1,4 @@
-package struct Requirement: Hashable {
+package struct Requirement {
     package let type: TypeName
     package let location: SourceLocation
 

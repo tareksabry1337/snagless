@@ -46,7 +46,7 @@ struct EdgeLinker {
     private let options: AnalysisOptions
     private let suppressions: SuppressionIndex
     private let providerNeeds: [Provision: Set<TypeName>]
-    private var slotNeeds: [ModuleType: Set<TypeName>] = [:]
+    private var slotNeedsCache: [ModuleType: Set<TypeName>] = [:]
 
     init(
         files: [SummarizedFile],
@@ -192,10 +192,10 @@ struct EdgeLinker {
 
     private mutating func slotNeeds(_ owner: TypeName, file: Int) -> Set<TypeName> {
         let key = ModuleType(module: files[file].file.module, type: owner)
-        if let cached = slotNeeds[key] {
+        if let cached = slotNeedsCache[key] {
             return cached
         }
-        slotNeeds[key] = []
+        slotNeedsCache[key] = []
         var slots: [Set<TypeName>] = []
         for slot in lookup(.type(owner), file: file).flatMap({ index.nodes[$0].slots }) {
             slots.append(needs(providedBy: slot, file: file))
@@ -204,7 +204,7 @@ struct EdgeLinker {
         if let first = slots.first {
             shared = slots.dropFirst().reduce(first) { $0.intersection($1) }
         }
-        slotNeeds[key] = shared
+        slotNeedsCache[key] = shared
         return shared
     }
 

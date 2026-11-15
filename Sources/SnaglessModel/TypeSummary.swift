@@ -1,4 +1,4 @@
-package enum TypeKind: String {
+package enum TypeKind {
     case value
     case `class`
     case `protocol`

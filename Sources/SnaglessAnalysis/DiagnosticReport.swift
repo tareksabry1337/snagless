@@ -26,8 +26,12 @@ struct DiagnosticReport {
         let child: LinkedChild
         let rootProvides: Set<TypeName>
         let shownFrom: String
-        let kind: RootKind
         let severity: Severity
+    }
+
+    private struct NextStep {
+        let step: Step
+        let edge: LinkedChild
     }
 
     private let files: [SummarizedFile]
@@ -69,7 +73,6 @@ struct DiagnosticReport {
                             child: child,
                             rootProvides: [],
                             shownFrom: "a sheet in \(label)",
-                            kind: .presentation,
                             severity: severity,
                         )
                     )
@@ -79,7 +82,6 @@ struct DiagnosticReport {
                             child: child,
                             rootProvides: root.kind == .app ? delegateTypes : [],
                             shownFrom: label,
-                            kind: root.kind,
                             severity: severity,
                         )
                     )
@@ -96,7 +98,6 @@ struct DiagnosticReport {
                         child: child,
                         rootProvides: [],
                         shownFrom: "a sheet in `\(index.nodes[node].name)`",
-                        kind: .presentation,
                         severity: .error,
                     )
                 )
@@ -115,7 +116,7 @@ struct DiagnosticReport {
             var message =
                 "`\(index.nodes[edge.node].name)` is shown from \(finding.shownFrom)"
                 + " without `\(need)`; required by \(witness)."
-            if finding.kind == .presentation {
+            if edge.startsEmpty {
                 message +=
                     " With --legacy-sheets, a sheet starts with an empty environment."
             }
@@ -165,16 +166,18 @@ struct DiagnosticReport {
                 .filter { !$0.startsEmpty }
                 .flatMap { child in
                     steps(into: child, need: need, arriving: { $0.contains(need, from: current.source) })
-                        .map { (step: $0, edge: child) }
+                        .map { NextStep(step: $0, edge: child) }
                 }
                 .sorted {
                     (index.nodes[$0.step.node].name, $0.step.node, $0.step.source.rawValue)
                         < (index.nodes[$1.step.node].name, $1.step.node, $1.step.source.rawValue)
                 }
-            for (step, child) in next where passesDestination[step] == nil {
+            for candidate in next where passesDestination[candidate.step] == nil {
+                let step = candidate.step
                 parent[step] = current
                 passesDestination[step] =
-                    passesDestination[current, default: false] || child.passesNavigationDestination(from: step.source)
+                    passesDestination[current, default: false]
+                    || candidate.edge.passesNavigationDestination(from: step.source)
                 queue.append(step)
             }
         }

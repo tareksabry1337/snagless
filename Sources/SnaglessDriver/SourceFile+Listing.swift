@@ -22,9 +22,11 @@ extension SourceFile {
         return files.sorted { $0.path < $1.path }
     }
 
-    static func swiftFiles(inDirectory path: String, module: String) -> [SourceFile] {
+    static func swiftFiles(inDirectory path: String, module: String? = nil) -> [SourceFile] {
+        let root = URL(fileURLWithPath: path).standardized
         let prefix = path.hasSuffix("/") ? path : path + "/"
-        return relativeSwiftPaths(in: path).map { SourceFile(path: prefix + $0, module: module) }
+        return relativeSwiftPaths(in: path)
+            .map { SourceFile(path: prefix + $0, module: module ?? moduleName(of: $0, under: root)) }
     }
 
     private static func packageModuleName(_ components: [String], from start: Int = 0) -> String? {
@@ -36,18 +38,10 @@ extension SourceFile {
         return nil
     }
 
-    private static func swiftFiles(inDirectory path: String) -> [SourceFile] {
-        let root = URL(fileURLWithPath: path).standardized
-        let prefix = path.hasSuffix("/") ? path : path + "/"
-        let rootComponents = root.pathComponents
-        return relativeSwiftPaths(in: path)
-            .map { relative in
-                let components = relative.split(separator: "/").map(String.init)
-                let topFolder = components.count > 1 ? components[0] : root.lastPathComponent
-                let module =
-                    packageModuleName(rootComponents + components, from: rootComponents.count - 2) ?? topFolder
-                return SourceFile(path: prefix + relative, module: module)
-            }
+    private static func moduleName(of relativePath: String, under root: URL) -> String {
+        let components = relativePath.split(separator: "/").map(String.init)
+        let topFolder = components.count > 1 ? components[0] : root.lastPathComponent
+        return packageModuleName(root.pathComponents + components, from: root.pathComponents.count - 2) ?? topFolder
     }
 
     private static func relativeSwiftPaths(in path: String) -> [String] {

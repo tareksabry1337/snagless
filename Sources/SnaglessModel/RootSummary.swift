@@ -1,9 +1,8 @@
-package enum RootKind: String {
+package enum RootKind {
     case app
     case preview
     case hosting
     case widget
-    case presentation
 }
 
 package enum RootOrigin: Hashable {

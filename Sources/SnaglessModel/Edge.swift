@@ -20,7 +20,7 @@ package struct Boundary: Hashable {
     }
 }
 
-package struct Edge: Hashable {
+package struct Edge {
     package let target: EdgeTarget
     package let location: SourceLocation
     package let provided: [Provision]

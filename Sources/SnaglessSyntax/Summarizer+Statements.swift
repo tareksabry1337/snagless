@@ -26,10 +26,9 @@ extension Summarizer {
     ) {
         guard let body = decl.body else { return }
         var inner = scope
-        inner.generics.formUnion(decl.genericParameterClause?.parameters.map(\.name.text) ?? [])
+        inner.generics.formUnion(decl.genericParameterNames)
         for parameter in signature.parameterClause.parameters {
-            let name = (parameter.secondName ?? parameter.firstName).text
-            inner.locals[name] = LocalBinding(reference(parameter.type, scope: inner).map(ValueReference.type))
+            bindParameter(parameter.firstName, parameter.secondName, type: parameter.type, in: &inner)
         }
         summarize(Syntax(body), provided: provided, scope: inner)
     }
@@ -43,14 +42,21 @@ extension Summarizer {
             }
         case .parameterClause(let clause):
             for parameter in clause.parameters {
-                let name = (parameter.secondName ?? parameter.firstName).text
-                let type = parameter.type.flatMap { reference($0, scope: scope) }
-                inner.locals[name] = LocalBinding(type.map(ValueReference.type))
+                bindParameter(parameter.firstName, parameter.secondName, type: parameter.type, in: &inner)
             }
         case nil:
             break
         }
         summarize(Syntax(closure.statements), provided: provided, scope: inner)
+    }
+
+    private func bindParameter(
+        _ firstName: TokenSyntax,
+        _ secondName: TokenSyntax?,
+        type: TypeSyntax?,
+        in scope: inout Scope,
+    ) {
+        scope.locals[(secondName ?? firstName).text] = LocalBinding(declaredValue(type, scope: scope))
     }
 
     func visitIf(_ expr: IfExprSyntax, provided: [Provision], scope: Scope) {
@@ -69,9 +75,7 @@ extension Summarizer {
     func visitFor(_ stmt: ForStmtSyntax, provided: [Provision], scope: Scope) {
         summarize(Syntax(stmt.sequence), provided: provided, scope: scope)
         var inner = scope
-        let binding = LocalBinding(
-            stmt.typeAnnotation.flatMap { reference($0.type, scope: scope) }.map(ValueReference.type)
-        )
+        let binding = LocalBinding(declaredValue(stmt.typeAnnotation?.type, scope: scope))
         for name in stmt.pattern.boundNames {
             inner.locals[name] = binding
         }
@@ -110,9 +114,11 @@ extension Summarizer {
                 summarize(Syntax(accessors), provided: provided, scope: valueScope)
             }
             let isSingleName = binding.pattern.is(IdentifierPatternSyntax.self)
-            let type =
-                binding.typeAnnotation.flatMap { reference($0.type, scope: scope) }.map(ValueReference.type)
-                ?? binding.initializer.flatMap { valueReference($0.value, scope: scope) }
+            let type = declaredOrInitialValue(
+                binding.typeAnnotation?.type,
+                initializer: binding.initializer?.value,
+                scope: scope,
+            )
             for name in names {
                 scope.locals[name] = isSingleName ? LocalBinding(type) : .untyped
             }
@@ -137,9 +143,7 @@ extension Summarizer {
                     let value =
                         binding.initializer?.value
                         ?? ExprSyntax(DeclReferenceExprSyntax(baseName: .identifier(name)))
-                    let type =
-                        binding.typeAnnotation.flatMap { reference($0.type, scope: current) }
-                        .map(ValueReference.type) ?? valueReference(value, scope: current)
+                    let type = declaredOrInitialValue(binding.typeAnnotation?.type, initializer: value, scope: current)
                     current.locals[name] = LocalBinding(type)
                 }
             case .matchingPattern(let pattern):

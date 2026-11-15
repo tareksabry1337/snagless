@@ -11,8 +11,8 @@ struct TrappingKeys {
         }
     }
 
-    private(set) var diagnostics: [Diagnostic] = []
-    private(set) var usedSuppressions: Set<SuppressionID> = []
+    let diagnostics: [Diagnostic]
+    let usedSuppressions: Set<SuppressionID>
 
     init(_ files: [SummarizedFile], suppressions: SuppressionIndex) {
         let declarations = Self.declarations(in: files)
@@ -27,6 +27,8 @@ struct TrappingKeys {
                 }
             }
         }
+        var diagnostics: [Diagnostic] = []
+        var usedSuppressions: Set<SuppressionID> = []
         for (name, declaration) in declarations where used.contains(name) {
             if let id = suppressions.ignoring(key: name, file: declaration.file, line: declaration.location.line) {
                 usedSuppressions.insert(id)
@@ -54,6 +56,8 @@ struct TrappingKeys {
                 )
             )
         }
+        self.diagnostics = diagnostics
+        self.usedSuppressions = usedSuppressions
     }
 
     private static func declarations(in files: [SummarizedFile]) -> [String: Site] {

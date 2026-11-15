@@ -6,13 +6,7 @@ extension Summarizer {
         guard let base = access.base else { return }
         let name = access.declName.baseName.text
         if base.isSelf {
-            addMemberEdge(
-                name: name,
-                member: MemberName(base: name),
-                at: access.declName,
-                provided: provided,
-                scope: scope,
-            )
+            addMemberEdge(MemberName(base: name), at: access.declName, provided: provided, scope: scope)
             return
         }
         if !name.isTypeName {
@@ -97,7 +91,7 @@ extension Summarizer {
             }
         } else {
             receiver = scope.memberOwner.map(ValueReference.type)
-            addMemberEdge(name: modifier, member: member, at: name, provided: provided, scope: scope)
+            addMemberEdge(member, at: name, provided: provided, scope: scope)
         }
         let added = modifierProvisions(call, name: name, receiver: receiver, provided: provided, scope: scope)
         if appliesToSelf(base, scope: scope) {
@@ -256,15 +250,9 @@ extension Summarizer {
         }
     }
 
-    func addMemberEdge(
-        name: String,
-        member: MemberName,
-        at node: some SyntaxProtocol,
-        provided: [Provision],
-        scope: Scope,
-    ) {
-        guard let owner = scope.memberOwner, isMemberName(name, scope: scope) else { return }
-        if scope.slotNames.contains(name), case .node(let index) = scope.sink {
+    func addMemberEdge(_ member: MemberName, at node: some SyntaxProtocol, provided: [Provision], scope: Scope) {
+        guard let owner = scope.memberOwner, isMemberName(member.base, scope: scope) else { return }
+        if scope.slotNames.contains(member.base), case .node(let index) = scope.sink {
             let slot = Set(provided)
             if !summary.nodes[index].slots.contains(where: { Set($0) == slot }) {
                 summary.nodes[index].slots.append(provided)

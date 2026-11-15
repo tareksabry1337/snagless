@@ -162,8 +162,7 @@ package final class Summarizer {
         case .memberAccessExpr(let access):
             visitMemberAccess(access, provided: provided, scope: scope)
         case .declReferenceExpr(let reference):
-            let name = reference.baseName.text
-            addMemberEdge(name: name, member: MemberName(base: name), at: reference, provided: provided, scope: scope)
+            addMemberEdge(MemberName(base: reference.baseName.text), at: reference, provided: provided, scope: scope)
         default:
             summarizeChildren(expr, provided: provided, scope: scope)
         }
