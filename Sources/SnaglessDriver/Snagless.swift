@@ -18,14 +18,29 @@ public enum Snagless {
         }
     }
 
+    private static func listFiles(_ options: Options) throws(UsageError) -> [SourceFile] {
+        try checkInputsExist(options)
+        var fromGraph: [SourceFile] = []
+        if let graphPath = options.targetGraph {
+            do {
+                fromGraph = try SourceFile.list(targetGraph: graphPath)
+            } catch {
+                throw UsageError(
+                    message: "--targets \(graphPath) must be a readable target graph: \(error.localizedDescription)"
+                )
+            }
+        }
+        return firstOfEachPath(fromGraph + SourceFile.list(packages: options.packages) + SourceFile.list(options.paths))
+    }
+
     private static func checkInputsExist(_ options: Options) throws(UsageError) {
         for path in options.paths where !FileManager.default.fileExists(atPath: path) {
-            throw UsageError(message: "no such file or directory: \(path)")
+            throw UsageError(message: "\(path) must be an existing file or folder")
         }
         for package in options.packages {
             let manifest = URL(fileURLWithPath: package).appendingPathComponent("Package.swift").path
             guard FileManager.default.fileExists(atPath: manifest) else {
-                throw UsageError(message: "no Package.swift in \(package)")
+                throw UsageError(message: "--package \(package) must be a folder with a Package.swift")
             }
         }
     }
@@ -33,24 +48,13 @@ public enum Snagless {
     private static func run(_ options: Options) throws(UsageError) -> Int32 {
         let clock = ContinuousClock()
         let start = clock.now
-        try checkInputsExist(options)
-        var fromGraph: [SourceFile] = []
-        if let graphPath = options.targetGraph {
-            do {
-                fromGraph = try SourceFile.list(targetGraph: graphPath)
-            } catch {
-                throw UsageError(message: "cannot read target graph \(graphPath): \(error)")
-            }
-        }
-        let files = firstOfEachPath(
-            fromGraph + SourceFile.list(packages: options.packages) + SourceFile.list(options.paths)
-        )
+        let files = try listFiles(options)
         let listed = clock.now
         let batch: SummaryBatch
         do {
             batch = try SummaryBatch(files)
         } catch {
-            throw UsageError(message: error.paths.map { "cannot read \($0) as UTF-8 text" }.joined(separator: "\n"))
+            throw UsageError(message: error.paths.map { "\($0) must be readable UTF-8 text" }.joined(separator: "\n"))
         }
         let summarized = clock.now
         let analysis = Analysis((consume batch).files, options: options.analysis)

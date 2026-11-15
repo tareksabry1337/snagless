@@ -40,7 +40,7 @@ expect_pass() {
     local build=$2
     if ! "$build"; then
         show_errors
-        echo "FAIL $step: the build failed"
+        echo "FAIL $step: expected the build to pass"
         exit 1
     fi
     echo "ok   $step: passes"
@@ -50,13 +50,9 @@ expect_missing() {
     local step=$1
     local build=$2
     local type=$3
-    if "$build"; then
-        echo "FAIL $step: the build passed, so Snagless did not run again"
-        exit 1
-    fi
-    if ! grep -q "without \`$type\`" "$log"; then
+    if "$build" || ! grep -q "without \`$type\`" "$log"; then
         show_errors
-        echo "FAIL $step: the build failed without reporting \`$type\`"
+        echo "FAIL $step: expected the build to fail on the missing \`$type\`"
         exit 1
     fi
     echo "ok   $step: fails on the missing \`$type\`"
@@ -71,11 +67,11 @@ expect_cart_missing() {
     error+=" ContentView → CartBadge (.*/Examples/Shop/Sources/Shop/CartBadge.swift:12)"
     if ! grep -q "$error" "$log"; then
         show_errors
-        echo "FAIL $step: the missing \`Cart\` is not reported at $location"
+        echo "FAIL $step: expected the missing \`Cart\` reported at $location"
         exit 1
     fi
     if grep -q "without \`Session\`" "$log"; then
-        echo "FAIL $step: \`Session\` is provided but reported"
+        echo "FAIL $step: expected \`Session\` to count as provided"
         exit 1
     fi
 }

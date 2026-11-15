@@ -38,7 +38,9 @@ struct Options {
             switch argument {
             case "--previews":
                 let raw = try Self.value(after: argument, from: &iterator)
-                guard let mode = PreviewMode(rawValue: raw) else { throw UsageError(message: "bad --previews \(raw)") }
+                guard let mode = PreviewMode(rawValue: raw) else {
+                    throw UsageError(message: "--previews takes error, warning or off")
+                }
                 previews = mode
             case "--targets":
                 targetGraph = try Self.value(after: argument, from: &iterator)

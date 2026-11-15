@@ -126,7 +126,7 @@ extension SnaglessPlugin: XcodeBuildToolPlugin {
 private struct UnreadableProject: Error, CustomStringConvertible {
     let path: String
 
-    var description: String { "Snagless cannot find the objects in \(path)" }
+    var description: String { "Snagless needs the objects list in \(path) to find the project's local packages" }
 }
 
 private enum ProjectFile {
