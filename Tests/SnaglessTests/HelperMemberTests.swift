@@ -39,8 +39,8 @@ struct HelperMemberTests {
         #expect(
             TestProject(["App.swift": Fixture.app(showing: "Row()"), "Row.swift": row, "Leaf.swift": Fixture.leafView])
                 .errors() == [
-                    "App.swift:1:64: error: `Row` is shown from App `MyApp` without `Cart`; "
-                        + "required by Row → \(path) → Leaf (Leaf.swift:2)."
+                    "App.swift:1:64: error: `Leaf` needs `Cart`: "
+                        + "App `MyApp` → Row → \(path) → Leaf (Leaf.swift:2)"
                 ]
         )
     }
@@ -55,8 +55,8 @@ struct HelperMemberTests {
         ]
         #expect(
             TestProject(sources).errors() == [
-                "App.swift:1:64: error: `Row` is shown from App `MyApp` without `Cart`; "
-                    + "required by Row → Row.header → Leaf (Leaf.swift:2)."
+                "App.swift:1:64: error: `Leaf` needs `Cart`: "
+                    + "App `MyApp` → Row → Row.header → Leaf (Leaf.swift:2)"
             ]
         )
     }
@@ -88,8 +88,8 @@ struct HelperMemberTests {
         ]
         #expect(
             TestProject(sources).errors() == [
-                "App.swift:1:64: error: `Root` is shown from App `MyApp` without `Cart`; "
-                    + "required by Root → Root.content(for:) → Tab.makeContent() → Leaf (Leaf.swift:2)."
+                "App.swift:1:64: error: `Leaf` needs `Cart`: "
+                    + "App `MyApp` → Root → Root.content(for:) → Tab.makeContent() → Leaf (Leaf.swift:2)"
             ]
         )
     }
@@ -131,8 +131,8 @@ struct HelperMemberTests {
                 "App.swift": Fixture.app(showing: "Screen()"), "Screen.swift": named, "Leaf.swift": Fixture.leafView,
             ])
             .errors() == [
-                "App.swift:1:64: error: `Screen` is shown from App `MyApp` without `Cart`; "
-                    + "required by Screen → Screen.row(named:) → Leaf (Leaf.swift:2)."
+                "App.swift:1:64: error: `Leaf` needs `Cart`: "
+                    + "App `MyApp` → Screen → Screen.row(named:) → Leaf (Leaf.swift:2)"
             ]
         )
     }
@@ -153,8 +153,8 @@ struct HelperMemberTests {
         ]
         #expect(
             TestProject(sources).errors() == [
-                "App.swift:1:64: error: `Screen` is shown from App `MyApp` without `Cart`; "
-                    + "required by Screen → Posts.makeView() → Leaf (Leaf.swift:2)."
+                "App.swift:1:64: error: `Leaf` needs `Cart`: "
+                    + "App `MyApp` → Screen → Posts.makeView() → Leaf (Leaf.swift:2)"
             ]
         )
     }
@@ -172,8 +172,8 @@ struct HelperMemberTests {
                 "App.swift": Fixture.app(showing: "Screen()"), "Screen.swift": screen, "Leaf.swift": Fixture.leafView,
             ])
             .errors() == [
-                "App.swift:1:64: error: `Screen` is shown from App `MyApp` without `Cart`; "
-                    + "required by Screen → Screen.badge(for:) → Leaf (Leaf.swift:2)."
+                "App.swift:1:64: error: `Leaf` needs `Cart`: "
+                    + "App `MyApp` → Screen → Screen.badge(for:) → Leaf (Leaf.swift:2)"
             ]
         )
     }

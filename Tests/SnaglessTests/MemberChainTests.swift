@@ -57,7 +57,7 @@ struct MemberChainTests {
         let sources = ["App.swift": app, "Leaf.swift": Fixture.leafView]
         #expect(
             TestProject(sources).errors() == [
-                "App.swift:3:42: error: `Leaf` is shown from App `MyApp` without `Cart`; required by Leaf (Leaf.swift:2)."
+                "App.swift:3:42: error: `Leaf` needs `Cart`: App `MyApp` → Leaf (Leaf.swift:2)"
             ]
         )
         #expect(
@@ -93,7 +93,7 @@ struct MemberChainTests {
         let factory = "final class Factory { func make<Cart>() -> Cart { fatalError() } }"
         #expect(
             TestProject(["Factory.swift": factory, "App.swift": app, "Leaf.swift": Fixture.leafView]).errors() == [
-                "App.swift:3:42: error: `Leaf` is shown from App `MyApp` without `Cart`; required by Leaf (Leaf.swift:2)."
+                "App.swift:3:42: error: `Leaf` needs `Cart`: App `MyApp` → Leaf (Leaf.swift:2)"
             ]
         )
     }

@@ -50,7 +50,7 @@ expect_missing() {
     local step=$1
     local build=$2
     local type=$3
-    if "$build" || ! grep -q "without \`$type\`" "$log"; then
+    if "$build" || ! grep -q "needs \`$type\`" "$log"; then
         show_errors
         echo "FAIL $step: expected the build to fail on the missing \`$type\`"
         exit 1
@@ -63,14 +63,14 @@ expect_cart_missing() {
     local build=$2
     local location=$3
     expect_missing "$step" "$build" Cart
-    local error="$location: error: \`ContentView\` is shown from App \`DemoApp\` without \`Cart\`; required by"
-    error+=" ContentView → CartBadge (.*/Examples/Shop/Sources/Shop/CartBadge.swift:12)"
+    local error="$location: error: \`CartBadge\` needs \`Cart\`: App \`DemoApp\` → ContentView → CartBadge"
+    error+=" (.*/Examples/Shop/Sources/Shop/CartBadge.swift:12)"
     if ! grep -q "$error" "$log"; then
         show_errors
         echo "FAIL $step: expected the missing \`Cart\` reported at $location"
         exit 1
     fi
-    if grep -q "without \`Session\`" "$log"; then
+    if grep -q "needs \`Session\`" "$log"; then
         echo "FAIL $step: expected \`Session\` to count as provided"
         exit 1
     fi

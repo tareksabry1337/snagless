@@ -39,18 +39,14 @@ struct TrappingKeys {
                     path: declaration.path,
                     location: declaration.location,
                     severity: .error,
-                    message: "the default of `\\.\(name)` traps, and SwiftUI runs it when the key is read"
-                        + " without being set and can also run it when the key is set, so any use can crash."
-                        + " Give it a default that doesn't trap (an optional or a sentinel value),"
-                        + " or provide the value as a type read with `@Environment(Type.self)`.",
+                    message: "`\\.\(name)` has a crashing default",
                     subject: "\\." + name,
                     notes: writes[name, default: []].sorted()
                         .map { write in
                             DiagnosticNote(
                                 path: write.path,
                                 location: write.location,
-                                message: "setting `\\.\(name)` here can run its trapping default"
-                                    + " (\(declaration.path):\(declaration.location.line))",
+                                message: "`\\.\(name)` set here can run its default",
                             )
                         },
                 )

@@ -6,7 +6,7 @@ struct PreviewTests {
     @Test
     func previewFindingsFollowThePreviewsOption() {
         let sources = ["Leaf.swift": Fixture.leafView + "\n#Preview { Leaf() }\n"]
-        let finding = "`Leaf` is shown from preview `Leaf` without `Cart`; required by Leaf (Leaf.swift:2)."
+        let finding = "`Leaf` needs `Cart`: preview `Leaf` → Leaf (Leaf.swift:2)"
         #expect(
             TestProject(sources).errors(options: AnalysisOptions(previews: .error)) == [
                 "Leaf.swift:5:12: error: " + finding
@@ -42,10 +42,8 @@ struct PreviewTests {
             """
         #expect(
             TestProject(["Previews.swift": previews, "Leaf.swift": Fixture.leafView]).errors() == [
-                "Previews.swift:2:5: error: `Leaf` is shown from preview `Traits` without `Cart`; "
-                    + "required by Leaf (Leaf.swift:2).",
-                "Previews.swift:14:5: error: `Leaf` is shown from preview `Debug` without `Cart`; "
-                    + "required by Leaf (Leaf.swift:2).",
+                "Previews.swift:2:5: error: `Leaf` needs `Cart`: preview `Traits` → Leaf (Leaf.swift:2)",
+                "Previews.swift:14:5: error: `Leaf` needs `Cart`: preview `Debug` → Leaf (Leaf.swift:2)",
             ]
         )
     }

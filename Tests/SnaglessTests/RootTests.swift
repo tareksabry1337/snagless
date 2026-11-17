@@ -16,7 +16,7 @@ struct RootTests {
             """
         #expect(
             TestProject(["App.swift": app, "Leaf.swift": Fixture.leafView]).errors() == [
-                "App.swift:4:13: error: `Leaf` is shown from App `MyApp` without `Cart`; required by Leaf (Leaf.swift:2)."
+                "App.swift:4:13: error: `Leaf` needs `Cart`: App `MyApp` → Leaf (Leaf.swift:2)"
             ]
         )
     }
@@ -51,7 +51,7 @@ struct RootTests {
             """
         #expect(
             TestProject(["App.swift": app, "App+Scene.swift": scene, "Leaf.swift": Fixture.leafView]).errors() == [
-                "App+Scene.swift:3:23: error: `Leaf` is shown from App `MyApp` without `Cart`; required by Leaf (Leaf.swift:2)."
+                "App+Scene.swift:3:23: error: `Leaf` needs `Cart`: App `MyApp` → Leaf (Leaf.swift:2)"
             ]
         )
     }
@@ -72,8 +72,8 @@ struct RootTests {
         ]
         #expect(
             TestProject(sources).errors() == [
-                "Parent.swift:4:39: error: `Leaf` is shown from a hosting controller in `Parent` without `Cart`; "
-                    + "required by Leaf (Leaf.swift:2)."
+                "Parent.swift:4:39: error: `Leaf` needs `Cart`: "
+                    + "hosting controller in `Parent` → Leaf (Leaf.swift:2)"
             ]
         )
     }
@@ -92,8 +92,8 @@ struct RootTests {
             """
         #expect(
             TestProject(["Host.swift": host, "Leaf.swift": Fixture.leafView]).errors() == [
-                "Host.swift:3:20: error: `Leaf` is shown from a hosting controller in `Host` without `Cart`; "
-                    + "required by Leaf (Leaf.swift:2)."
+                "Host.swift:3:20: error: `Leaf` needs `Cart`: "
+                    + "hosting controller in `Host` → Leaf (Leaf.swift:2)"
             ]
         )
     }
@@ -114,8 +114,8 @@ struct RootTests {
         ]
         #expect(
             TestProject(sources).errors() == [
-                "Parent.swift:4:23: error: `Leaf` is shown from a hosting controller in `Parent` without `Cart`; "
-                    + "required by Leaf (Leaf.swift:2)."
+                "Parent.swift:4:23: error: `Leaf` needs `Cart`: "
+                    + "hosting controller in `Parent` → Leaf (Leaf.swift:2)"
             ]
         )
     }
@@ -130,8 +130,8 @@ struct RootTests {
             """
         #expect(
             TestProject(["Host.swift": host, "Leaf.swift": Fixture.leafView]).errors() == [
-                "Host.swift:2:35: error: `Leaf` is shown from a hosting controller in `Host` without `Cart`; "
-                    + "required by Leaf (Leaf.swift:2)."
+                "Host.swift:2:35: error: `Leaf` needs `Cart`: "
+                    + "hosting controller in `Host` → Leaf (Leaf.swift:2)"
             ]
         )
     }
@@ -163,7 +163,7 @@ struct RootTests {
             """
         #expect(
             TestProject(["Widget.swift": widget, "Leaf.swift": Fixture.leafView]).errors() == [
-                "Widget.swift:3:73: error: `Leaf` is shown from widget `MyWidget` without `Cart`; required by Leaf (Leaf.swift:2)."
+                "Widget.swift:3:73: error: `Leaf` needs `Cart`: widget `MyWidget` → Leaf (Leaf.swift:2)"
             ]
         )
     }
@@ -197,8 +197,8 @@ struct RootTests {
             """
         #expect(
             TestProject(["App.swift": app, "Delegates.swift": delegates, "Leaf.swift": leaf]).errors() == [
-                "Leaf.swift:6:12: error: `Leaf` is shown from preview `Leaf` without `AppDelegate`; required by Leaf (Leaf.swift:3).",
-                "Leaf.swift:6:12: error: `Leaf` is shown from preview `Leaf` without `SceneDelegate`; required by Leaf (Leaf.swift:2).",
+                "Leaf.swift:6:12: error: `Leaf` needs `AppDelegate`: preview `Leaf` → Leaf (Leaf.swift:3)",
+                "Leaf.swift:6:12: error: `Leaf` needs `SceneDelegate`: preview `Leaf` → Leaf (Leaf.swift:2)",
             ]
         )
     }
@@ -222,8 +222,7 @@ struct RootTests {
         #expect(TestProject(sources).errors() == [])
         #expect(
             TestProject(sources).errors(options: AnalysisOptions(legacySheets: true)) == [
-                "Parent.swift:4:61: error: `Leaf` is shown from a sheet in `Parent` without `Cart`; required by Leaf (Leaf.swift:2)."
-                    + " With --legacy-sheets, a sheet starts with an empty environment."
+                "Parent.swift:4:61: error: `Leaf` needs `Cart`: sheet in `Parent` → Leaf (Leaf.swift:2)"
             ]
         )
     }

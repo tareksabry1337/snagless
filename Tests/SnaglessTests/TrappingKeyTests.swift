@@ -19,10 +19,7 @@ struct TrappingKeyTests {
         """
 
     private static func trapping(_ key: String, at site: String) -> String {
-        "Keys.swift:\(site): error: the default of `\\.\(key)` traps, and SwiftUI runs it when the key is read"
-            + " without being set and can also run it when the key is set, so any use can crash."
-            + " Give it a default that doesn't trap (an optional or a sentinel value),"
-            + " or provide the value as a type read with `@Environment(Type.self)`."
+        "Keys.swift:\(site): error: `\\.\(key)` has a crashing default"
     }
 
     @Test
@@ -62,9 +59,9 @@ struct TrappingKeyTests {
         #expect(
             TestProject(["App.swift": app, "Keys.swift": Self.keys, "Writer.swift": writer]).errors() == [
                 Self.trapping("session", at: "12:16"),
-                "App.swift:1:85: note: setting `\\.session` here can run its trapping default (Keys.swift:12)",
-                "Writer.swift:4:26: note: setting `\\.session` here can run its trapping default (Keys.swift:12)",
-                "Writer.swift:5:35: note: setting `\\.session` here can run its trapping default (Keys.swift:12)",
+                "App.swift:1:85: note: `\\.session` set here can run its default",
+                "Writer.swift:4:26: note: `\\.session` set here can run its default",
+                "Writer.swift:5:35: note: `\\.session` set here can run its default",
             ]
         )
     }

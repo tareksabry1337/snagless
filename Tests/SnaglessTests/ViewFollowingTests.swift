@@ -10,7 +10,7 @@ struct ViewFollowingTests {
                 "App.swift": Fixture.app(showing: "Tabs()"), "Tabs.swift": tabs, "Leaf.swift": Fixture.leafView,
             ])
             .errors() == [
-                "App.swift:1:64: error: `Tabs` is shown from App `MyApp` without `Cart`; required by Tabs → Leaf (Leaf.swift:2)."
+                "App.swift:1:64: error: `Leaf` needs `Cart`: App `MyApp` → Tabs → Leaf (Leaf.swift:2)"
             ]
         )
     }
@@ -19,14 +19,14 @@ struct ViewFollowingTests {
         (
             "Screens.leaf()",
             [
-                "App.swift:1:72: error: `Leaf` is shown from App `MyApp` without `Cart`; required by Leaf (Leaf.swift:2)."
+                "App.swift:1:72: error: `Leaf` needs `Cart`: App `MyApp` → Leaf (Leaf.swift:2)"
             ],
         ),
         ("Screens.leaf().environment(Cart.shared)", []),
         (
             "Rows().leaf()",
             [
-                "App.swift:1:71: error: `Leaf` is shown from App `MyApp` without `Cart`; required by Leaf (Leaf.swift:2)."
+                "App.swift:1:71: error: `Leaf` needs `Cart`: App `MyApp` → Leaf (Leaf.swift:2)"
             ],
         ),
     ])
@@ -58,7 +58,7 @@ struct ViewFollowingTests {
                 "App.swift": Fixture.app(showing: "Root()"), "Views.swift": views, "Leaf.swift": Fixture.leafView,
             ])
             .errors() == [
-                "App.swift:1:64: error: `Root` is shown from App `MyApp` without `Cart`; required by Root → Leaf (Leaf.swift:2)."
+                "App.swift:1:64: error: `Leaf` needs `Cart`: App `MyApp` → Root → Leaf (Leaf.swift:2)"
             ]
         )
     }
@@ -89,8 +89,8 @@ struct ViewFollowingTests {
         ]
         #expect(
             TestProject(sources).errors() == [
-                "App.swift:1:64: error: `Row` is shown from App `MyApp` without `Cart`; "
-                    + "required by Row → .withPopover() → Popover → Leaf (Leaf.swift:2)."
+                "App.swift:1:64: error: `Leaf` needs `Cart`: "
+                    + "App `MyApp` → Row → .withPopover() → Popover → Leaf (Leaf.swift:2)"
             ]
         )
     }
@@ -105,8 +105,8 @@ struct ViewFollowingTests {
         ]
         #expect(
             TestProject(sources).errors() == [
-                "App.swift:1:64: error: `Row` is shown from App `MyApp` without `Cart`; "
-                    + "required by Row → .padding() → Leaf (Leaf.swift:2)."
+                "App.swift:1:64: error: `Leaf` needs `Cart`: "
+                    + "App `MyApp` → Row → .padding() → Leaf (Leaf.swift:2)"
             ]
         )
     }
@@ -126,8 +126,8 @@ struct ViewFollowingTests {
         ]
         #expect(
             TestProject(sources).errors() == [
-                "App.swift:1:64: error: `Screen` is shown from App `MyApp` without `Cart`; "
-                    + "required by Screen → Items → Items.menu → Leaf (Leaf.swift:2)."
+                "App.swift:1:64: error: `Leaf` needs `Cart`: "
+                    + "App `MyApp` → Screen → Items → Items.menu → Leaf (Leaf.swift:2)"
             ]
         )
     }
@@ -145,7 +145,7 @@ struct ViewFollowingTests {
                 "App.swift": Fixture.app(showing: "Rows()"), "Rows.swift": rows, "Leaf.swift": Fixture.leafView,
             ])
             .errors() == [
-                "App.swift:1:64: error: `Rows` is shown from App `MyApp` without `Cart`; required by Rows → Leaf (Leaf.swift:2)."
+                "App.swift:1:64: error: `Leaf` needs `Cart`: App `MyApp` → Rows → Leaf (Leaf.swift:2)"
             ]
         )
     }

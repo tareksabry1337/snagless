@@ -39,8 +39,8 @@ struct NameResolutionTests {
         #expect(TestProject(sources.merging(["App.swift": provided]) { $1 }).errors() == [])
         #expect(
             TestProject(sources.merging(["App.swift": Fixture.app(showing: "ParentA()")]) { $1 }).errors() == [
-                "App.swift:1:64: error: `ParentA` is shown from App `MyApp` without `Cart`; "
-                    + "required by ParentA → ParentA.Row → ParentA.Row.header → Leaf (Leaf.swift:2)."
+                "App.swift:1:64: error: `Leaf` needs `Cart`: "
+                    + "App `MyApp` → ParentA → ParentA.Row → ParentA.Row.header → Leaf (Leaf.swift:2)"
             ]
         )
     }
@@ -49,7 +49,7 @@ struct NameResolutionTests {
         (
             "Panel().environment(Bank.Store())",
             [
-                "App.swift:1:64: error: `Panel` is shown from App `MyApp` without `Shop.Store`; required by Panel (Panel.swift:1)."
+                "App.swift:1:64: error: `Panel` needs `Shop.Store`: App `MyApp` → Panel (Panel.swift:1)"
             ],
         ),
         ("Panel().environment(Shop.Store())", []),
@@ -74,8 +74,8 @@ struct NameResolutionTests {
         (
             "Outer.Extended()",
             [
-                "App.swift:1:64: error: `Outer.Extended` is shown from App `MyApp` without `Cart`; "
-                    + "required by Outer.Extended → Outer.Extended.extra → Leaf (Leaf.swift:2)."
+                "App.swift:1:64: error: `Leaf` needs `Cart`: "
+                    + "App `MyApp` → Outer.Extended → Outer.Extended.extra → Leaf (Leaf.swift:2)"
             ],
         ),
     ])
@@ -112,7 +112,7 @@ struct NameResolutionTests {
         (
             "Shop.Badge()",
             [
-                "App/App.swift:2:64: error: `Badge` is shown from App `MyApp` without `Cart`; required by Badge (Shop/Shop.swift:2)."
+                "App/App.swift:2:64: error: `Badge` needs `Cart`: App `MyApp` → Badge (Shop/Shop.swift:2)"
             ],
         ),
     ])
@@ -145,8 +145,8 @@ struct NameResolutionTests {
             """
         #expect(
             TestProject(modules: ["Shop": ["Shop/Shop.swift": shop], "App": ["App/App.swift": app]]).errors() == [
-                "App/App.swift:3:76: error: `Cart.badge` is shown from App `MyApp` without `Wallet`; "
-                    + "required by Cart.badge → Cart.Row (Shop/Shop.swift:2)."
+                "App/App.swift:3:76: error: `Cart.Row` needs `Wallet`: "
+                    + "App `MyApp` → Cart.badge → Cart.Row (Shop/Shop.swift:2)"
             ]
         )
     }

@@ -3,7 +3,7 @@ import Testing
 @Suite
 struct InjectedValueTests {
     private static let missingCart =
-        "error: `Leaf` is shown from App `MyApp` without `Cart`; required by Leaf (Leaf.swift:2)."
+        "error: `Leaf` needs `Cart`: App `MyApp` → Leaf (Leaf.swift:2)"
 
     private static func app(injecting expression: String, members: String = "") -> String {
         """

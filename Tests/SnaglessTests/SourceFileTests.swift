@@ -83,8 +83,8 @@ struct SourceFileTests {
         #expect(TestProject(files: try SummaryBatch(fromGraph).files).errors() == [])
         #expect(
             TestProject(files: try SummaryBatch(byFolder).files).errors() == [
-                "\(file("App.swift")):1:64: error: `Detail` is shown from App `MyApp` without `Cart`; "
-                    + "required by Detail (\(file("OtherDetail.swift")):1)."
+                "\(file("App.swift")):1:64: error: `Detail` needs `Cart`: "
+                    + "App `MyApp` → Detail (\(file("OtherDetail.swift")):1)"
             ]
         )
     }

@@ -8,12 +8,12 @@ struct DiagnosticReport {
     }
 
     private struct Witness: CustomStringConvertible {
-        let path: [NodeName]
+        let requiringView: NodeName
+        let path: [String]
         let source: RequirementSource
-        let passesNavigationDestination: Bool
 
         var description: String {
-            path.map(\.description).joined(separator: " → ") + " (\(source.path):\(source.location.line))"
+            path.joined(separator: " → ") + " (\(source.path):\(source.location.line))"
         }
     }
 
@@ -72,7 +72,7 @@ struct DiagnosticReport {
                         Finding(
                             child: child,
                             rootProvides: [],
-                            shownFrom: "a sheet in \(label)",
+                            shownFrom: "sheet in \(label)",
                             severity: severity,
                         )
                     )
@@ -97,7 +97,7 @@ struct DiagnosticReport {
                     Finding(
                         child: child,
                         rootProvides: [],
-                        shownFrom: "a sheet in `\(index.nodes[node].name)`",
+                        shownFrom: "sheet in `\(index.nodes[node].name)`",
                         severity: .error,
                     )
                 )
@@ -113,18 +113,7 @@ struct DiagnosticReport {
             guard reported.insert(Site(path: path, location: location, need: need)).inserted,
                 let witness = witness(through: edge, need: need)
             else { continue }
-            var message =
-                "`\(index.nodes[edge.node].name)` is shown from \(finding.shownFrom)"
-                + " without `\(need)`; required by \(witness)."
-            if edge.startsEmpty {
-                message +=
-                    " With --legacy-sheets, a sheet starts with an empty environment."
-            }
-            if witness.passesNavigationDestination {
-                message +=
-                    " A navigationDestination gets the environment of its NavigationStack;"
-                    + " provide the value on the stack or inside the destination."
-            }
+            let message = "`\(witness.requiringView)` needs `\(need)`: \(finding.shownFrom) → \(witness)"
             diagnostics.append(
                 Diagnostic(
                     path: path,
@@ -139,10 +128,10 @@ struct DiagnosticReport {
 
     private func witness(through edge: LinkedChild, need: TypeName) -> Witness? {
         var queue: [Step] = []
-        var passesDestination: [Step: Bool] = [:]
+        var entersDestination: [Step: Bool] = [:]
         for step in steps(into: edge, need: need, arriving: { $0.all.contains(need) }) {
             queue.append(step)
-            passesDestination[step] = edge.passesNavigationDestination(from: step.source)
+            entersDestination[step] = edge.passesNavigationDestination(from: step.source)
         }
         var parent: [Step: Step] = [:]
         var head = 0
@@ -150,16 +139,20 @@ struct DiagnosticReport {
             let current = queue[head]
             head += 1
             if current.source == .parent, let source = needs.direct[current.node][need] {
-                var path = [index.nodes[current.node].name]
+                var path: [String] = []
                 var step = current
-                while let previous = parent[step] {
-                    path.append(index.nodes[previous.node].name)
+                while true {
+                    path.append(index.nodes[step.node].name.description)
+                    if entersDestination[step, default: false] {
+                        path.append("navigationDestination")
+                    }
+                    guard let previous = parent[step] else { break }
                     step = previous
                 }
                 return Witness(
+                    requiringView: index.nodes[current.node].name,
                     path: path.reversed(),
                     source: source,
-                    passesNavigationDestination: passesDestination[current, default: false],
                 )
             }
             let next = links.nodes[current.node]
@@ -172,12 +165,10 @@ struct DiagnosticReport {
                     (index.nodes[$0.step.node].name, $0.step.node, $0.step.source.rawValue)
                         < (index.nodes[$1.step.node].name, $1.step.node, $1.step.source.rawValue)
                 }
-            for candidate in next where passesDestination[candidate.step] == nil {
+            for candidate in next where entersDestination[candidate.step] == nil {
                 let step = candidate.step
                 parent[step] = current
-                passesDestination[step] =
-                    passesDestination[current, default: false]
-                    || candidate.edge.passesNavigationDestination(from: step.source)
+                entersDestination[step] = candidate.edge.passesNavigationDestination(from: step.source)
                 queue.append(step)
             }
         }

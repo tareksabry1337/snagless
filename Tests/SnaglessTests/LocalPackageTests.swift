@@ -69,8 +69,8 @@ struct LocalPackageTests {
         let files = SourceFile.list([path("App")]) + packages
         #expect(
             TestProject(files: try SummaryBatch(files).files).errors() == [
-                "\(path("App/App.swift")):2:64: error: `Badge` is shown from App `MyApp` without `Cart`; "
-                    + "required by Badge → Leaf (\(path("Core/Sources/Core/Leaf.swift")):2)."
+                "\(path("App/App.swift")):2:64: error: `Leaf` needs `Cart`: "
+                    + "App `MyApp` → Badge → Leaf (\(path("Core/Sources/Core/Leaf.swift")):2)"
             ]
         )
         #expect(Snagless.main(arguments: ["--package", path("Shop"), path("App")]) == 1)

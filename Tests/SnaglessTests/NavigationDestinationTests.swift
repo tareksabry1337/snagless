@@ -24,13 +24,13 @@ struct NavigationDestinationTests {
             name: "provided between the stack and the declaring view",
             root: "NavigationStack { Declarer().environment(Cart.shared) }",
             declarer: destination,
-            crashPath: "Root → Declarer → Leaf",
+            crashPath: "Root → Declarer → navigationDestination → Leaf",
         ),
         Layout(
             name: "provided on the declaring view after the modifier",
             root: "NavigationStack { Declarer() }",
             declarer: destination + ".environment(Cart.shared)",
-            crashPath: "Root → Declarer → Leaf",
+            crashPath: "Root → Declarer → navigationDestination → Leaf",
         ),
         Layout(
             name: "provided inside the destination",
@@ -49,7 +49,7 @@ struct NavigationDestinationTests {
             name: "stack and destination in one body, provided between",
             root: "NavigationStack { \(destination).environment(Cart.shared) }",
             declarer: "Text(\"unused\")",
-            crashPath: "Root → Leaf",
+            crashPath: "Root → navigationDestination → Leaf",
         ),
     ]
 
@@ -63,7 +63,7 @@ struct NavigationDestinationTests {
             "Cart.swift": Fixture.cart,
         ])
         .errors()
-        #expect(errors == layout.crashPath.map { [Self.missingCart(shown: "Root", path: $0)] } ?? [])
+        #expect(errors == layout.crashPath.map { [Self.missingCart(path: $0)] } ?? [])
     }
 
     @Test
@@ -79,12 +79,12 @@ struct NavigationDestinationTests {
         )
         let providedInBetween = TestProject(base.merging(["App.swift": Fixture.app(showing: "Middle()")]) { $1 })
         #expect(providedAtTheRoot.errors() == [])
-        #expect(providedInBetween.errors() == [Self.missingCart(shown: "Middle", path: "Middle → Declarer → Leaf")])
+        #expect(
+            providedInBetween.errors() == [Self.missingCart(path: "Middle → Declarer → navigationDestination → Leaf")]
+        )
     }
 
-    private static func missingCart(shown: String, path: String) -> String {
-        "App.swift:1:64: error: `\(shown)` is shown from App `MyApp` without `Cart`; required by \(path) (Leaf.swift:2)."
-            + " A navigationDestination gets the environment of its NavigationStack;"
-            + " provide the value on the stack or inside the destination."
+    private static func missingCart(path: String) -> String {
+        "App.swift:1:64: error: `Leaf` needs `Cart`: App `MyApp` → \(path) (Leaf.swift:2)"
     }
 }

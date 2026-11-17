@@ -23,7 +23,7 @@ struct InjectionTests {
             """
         #expect(
             TestProject(["App.swift": Fixture.app(showing: "Leaf()"), "Leaf.swift": leaf]).errors() == [
-                "App.swift:1:64: error: `Leaf` is shown from App `MyApp` without `Store`; required by Leaf (Leaf.swift:2)."
+                "App.swift:1:64: error: `Leaf` needs `Store`: App `MyApp` → Leaf (Leaf.swift:2)"
             ]
         )
     }
@@ -42,8 +42,8 @@ struct InjectionTests {
             """
         #expect(
             TestProject(["App.swift": Fixture.app(showing: "Leaf()"), "Leaf.swift": leaf]).errors() == [
-                "App.swift:1:64: error: `Leaf` is shown from App `MyApp` without `Store`; required by Leaf (Leaf.swift:5).",
-                "App.swift:1:64: error: `Leaf` is shown from App `MyApp` without `Window`; required by Leaf (Leaf.swift:3).",
+                "App.swift:1:64: error: `Leaf` needs `Store`: App `MyApp` → Leaf (Leaf.swift:5)",
+                "App.swift:1:64: error: `Leaf` needs `Window`: App `MyApp` → Leaf (Leaf.swift:3)",
             ]
         )
     }
@@ -63,7 +63,7 @@ struct InjectionTests {
                 "App.swift": Fixture.app(showing: "Parent()"), "Parent.swift": parent, "Leaf.swift": Fixture.leafView,
             ])
             .errors() == [
-                "App.swift:1:64: error: `Parent` is shown from App `MyApp` without `Cart`; required by Parent → Parent.content → Leaf (Leaf.swift:2)."
+                "App.swift:1:64: error: `Leaf` needs `Cart`: App `MyApp` → Parent → Parent.content → Leaf (Leaf.swift:2)"
             ]
         )
     }
@@ -85,7 +85,7 @@ struct InjectionTests {
                 "App.swift": Fixture.app(showing: "Parent()"), "Parent.swift": parent, "Leaf.swift": Fixture.leafView,
             ])
             .errors() == [
-                "App.swift:1:64: error: `Parent` is shown from App `MyApp` without `Cart`; required by Parent → Leaf (Leaf.swift:2)."
+                "App.swift:1:64: error: `Leaf` needs `Cart`: App `MyApp` → Parent → Leaf (Leaf.swift:2)"
             ]
         )
     }
@@ -186,7 +186,7 @@ struct InjectionTests {
                 "App.swift": Fixture.app(showing: "Screen()"), "Screen.swift": screen, "Leaf.swift": Fixture.leafView,
             ])
             .errors() == [
-                "App.swift:1:64: error: `Screen` is shown from App `MyApp` without `Cart`; required by Screen → Leaf (Leaf.swift:2)."
+                "App.swift:1:64: error: `Leaf` needs `Cart`: App `MyApp` → Screen → Leaf (Leaf.swift:2)"
             ]
         )
     }
@@ -241,7 +241,7 @@ struct InjectionTests {
         ]
         #expect(
             TestProject(sources).errors() == [
-                "App.swift:1:64: error: `Screen` is shown from App `MyApp` without `Cart`; required by Screen → Leaf (Leaf.swift:2)."
+                "App.swift:1:64: error: `Leaf` needs `Cart`: App `MyApp` → Screen → Leaf (Leaf.swift:2)"
             ]
         )
     }

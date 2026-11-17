@@ -31,7 +31,7 @@ package enum RootOrigin: Hashable {
         case .widget(let name):
             return "widget `\(name)`"
         case .hosting(let enclosing):
-            return "a hosting controller in `\(enclosing)`"
+            return "hosting controller in `\(enclosing)`"
         case .preview(let title):
             return "preview `\(title)`"
         }

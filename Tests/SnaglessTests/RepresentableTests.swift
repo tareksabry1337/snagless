@@ -13,7 +13,7 @@ struct RepresentableTests {
             """
         #expect(
             TestProject(["App.swift": Fixture.app(showing: "Label()"), "Label.swift": label]).errors() == [
-                "App.swift:1:64: error: `Label` is shown from App `MyApp` without `Cart`; required by Label (Label.swift:2)."
+                "App.swift:1:64: error: `Label` needs `Cart`: App `MyApp` → Label (Label.swift:2)"
             ]
         )
     }
@@ -39,7 +39,7 @@ struct RepresentableTests {
         #expect(provided.errors() == [])
         #expect(
             missing.errors() == [
-                "App.swift:1:64: error: `Hosted` is shown from App `MyApp` without `Cart`; required by Hosted → Leaf (Leaf.swift:2)."
+                "App.swift:1:64: error: `Leaf` needs `Cart`: App `MyApp` → Hosted → Leaf (Leaf.swift:2)"
             ]
         )
     }
@@ -63,8 +63,8 @@ struct RepresentableTests {
         ]
         #expect(
             TestProject(sources).errors() == [
-                "Hosted.swift:3:47: error: `Leaf` is shown from a hosting controller in `Presenter` without `Cart`; "
-                    + "required by Leaf (Leaf.swift:2)."
+                "Hosted.swift:3:47: error: `Leaf` needs `Cart`: "
+                    + "hosting controller in `Presenter` → Leaf (Leaf.swift:2)"
             ]
         )
     }

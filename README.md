@@ -41,7 +41,7 @@ That builds fine and crashes the moment the toolbar shows up. With Snagless in t
 pointing at the line that shows the view and the path down to the view that wanted the cart:
 
 ```
-ShopApp.swift:26:13: error: `ContentView` is shown from App `ShopApp` without `Cart`; required by ContentView → CartBadge (ShopApp.swift:6).
+ShopApp.swift:26:13: error: `CartBadge` needs `Cart`: App `ShopApp` → ContentView → CartBadge (ShopApp.swift:6)
 ```
 
 Add `.environment(Cart())` to `ContentView()` and the build passes again.

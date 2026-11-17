@@ -46,7 +46,7 @@ struct SuppressionTests {
         ])
         #expect(
             project.errors() == [
-                "App.swift:1:64: error: `Screen` is shown from App `MyApp` without `Store`; required by Screen → Leaf (Leaf.swift:3)."
+                "App.swift:1:64: error: `Leaf` needs `Store`: App `MyApp` → Screen → Leaf (Leaf.swift:3)"
             ]
         )
         #expect(Self.activeCount(project) == 1)
@@ -63,7 +63,7 @@ struct SuppressionTests {
         let project = TestProject(["App.swift": Fixture.app(showing: "Leaf()"), "Leaf.swift": leaf])
         #expect(
             project.errors() == [
-                "App.swift:1:64: error: `Leaf` is shown from App `MyApp` without `Cart`; required by Leaf (Leaf.swift:2).",
+                "App.swift:1:64: error: `Leaf` needs `Cart`: App `MyApp` → Leaf (Leaf.swift:2)",
                 "Leaf.swift:2:46: warning: `// snagless: ignore Store` is unused on its line; remove it",
             ]
         )

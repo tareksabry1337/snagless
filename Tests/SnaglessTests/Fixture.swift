@@ -21,7 +21,7 @@ enum Fixture {
         """
 
     static let leafMissingCartFromApp =
-        "App.swift:1:64: error: `Leaf` is shown from App `MyApp` without `Cart`; required by Leaf (Leaf.swift:2)."
+        "App.swift:1:64: error: `Leaf` needs `Cart`: App `MyApp` → Leaf (Leaf.swift:2)"
 
     static func file(_ path: String) throws -> String {
         try String(contentsOf: packageRoot.appendingPathComponent("Tests/Fixtures/" + path), encoding: .utf8)
