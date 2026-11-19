@@ -168,7 +168,7 @@ CONTRIBUTING.md has the modules behind each step.
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/tareksabry1337/snagless", from: "0.9.1"),
+    .package(url: "https://github.com/tareksabry1337/snagless", from: "0.9.2"),
 ],
 targets: [
     .target(
