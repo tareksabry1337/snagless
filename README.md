@@ -1,3 +1,5 @@
+<p align="center"><img src=".github/icon.svg" width="128" height="128" alt="Snagless"></p>
+
 # Snagless
 
 Snagless finds SwiftUI environment crashes before your users do.
