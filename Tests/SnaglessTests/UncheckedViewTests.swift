@@ -1,3 +1,4 @@
+import SnaglessAnalysis
 import SnaglessDriver
 import Testing
 
@@ -33,6 +34,52 @@ struct UncheckedViewTests {
         let project = TestProject(["App.swift": Self.app, "Leaf.swift": leaf])
         #expect(project.errors() == [])
         #expect(project.analysis().stats.uncheckedViews == 0)
+    }
+
+    @Test
+    func viewOnlyAPreviewShowsIsUncheckedWithPreviewsOff() {
+        let preview = "#Preview { Leaf() }"
+        let project = TestProject(["App.swift": Self.app, "Leaf.swift": Fixture.leafView, "Preview.swift": preview])
+        let off = AnalysisOptions(previews: .off)
+        #expect(
+            project.errors(options: off) == [
+                "Leaf.swift:2:41: warning: `Leaf` is unreachable from every App and hosting root"
+            ]
+        )
+        #expect(project.analysis(options: off).stats.uncheckedViews == 1)
+        #expect(project.analysis().stats.uncheckedViews == 0)
+    }
+
+    @Test
+    func viewWithoutRequirementsOnlyAPreviewShowsIsANoteWithPreviewsOff() {
+        let orphan = "struct Orphan: View { var body: some View { Text(\"o\") } }"
+        let project = TestProject([
+            "App.swift": Self.app, "Orphan.swift": orphan, "Preview.swift": "#Preview { Orphan() }",
+        ])
+        #expect(
+            project.report(options: AnalysisOptions(previews: .off)).notes
+                == "Orphan.swift: note: `Orphan` is unreachable from every App and hosting root\n"
+        )
+        #expect(project.notes == [])
+    }
+
+    @Test(arguments: [[:], ["Preview.swift": "#Preview { Text(\"p\") }"]])
+    func viewsCheckedWithoutAnAppGetOneWarning(extra: [String: String]) {
+        let badge = "struct Badge: View { @Environment(Cart.self) var cart; var body: some View { Text(\"b\") } }"
+        let project = TestProject(["Leaf.swift": Fixture.leafView, "Badge.swift": badge].merging(extra) { $1 })
+        #expect(
+            project.errors() == [
+                "Badge.swift:1:50: warning: 2 views that read the environment are unchecked; "
+                    + "run Snagless on the app that shows them"
+            ]
+        )
+        #expect(
+            project.notes == [
+                "Badge.swift: note: `Badge` is unreachable from every App, preview and hosting root",
+                "Leaf.swift: note: `Leaf` is unreachable from every App, preview and hosting root",
+            ]
+        )
+        #expect(project.analysis().stats.uncheckedViews == 2)
     }
 
     @Test

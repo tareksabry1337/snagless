@@ -73,10 +73,10 @@ struct Needs {
 struct Reachability {
     let nodes: Set<Int>
 
-    init(links: Links) {
+    init(links: Links, from roots: some Sequence<Int>) {
         var reached: Set<Int> = []
         var stack: [Int] = []
-        for child in links.roots.joined() where reached.insert(child.node).inserted {
+        for child in roots.flatMap({ links.roots[$0] }) where reached.insert(child.node).inserted {
             stack.append(child.node)
         }
         while let node = stack.popLast() {

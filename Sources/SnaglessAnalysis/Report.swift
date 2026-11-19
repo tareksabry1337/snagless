@@ -21,7 +21,7 @@ package struct Report {
             lines.append(note.rendered + "\n")
         }
         for view in analysis.unreachableViews.sorted(by: Self.outputOrder) {
-            lines.append("\(view.path): note: `\(view.name)` is unreachable from every App, preview and hosting root\n")
+            lines.append("\(view.path): note: \(view.message)\n")
         }
         for path in analysis.unreadablePaths {
             lines.append("\(path): note: the parser read only part of this file, so its views may be incomplete\n")

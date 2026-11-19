@@ -17,7 +17,12 @@ struct PreviewTests {
                 "Leaf.swift:5:12: warning: " + finding
             ]
         )
-        #expect(TestProject(sources).errors(options: AnalysisOptions(previews: .off)) == [])
+        #expect(
+            TestProject(sources).errors(options: AnalysisOptions(previews: .off)) == [
+                "Leaf.swift:2:41: warning: 1 view that reads the environment is unchecked; "
+                    + "run Snagless on the app that shows them"
+            ]
+        )
     }
 
     @Test

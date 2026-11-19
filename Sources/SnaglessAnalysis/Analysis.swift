@@ -65,6 +65,7 @@ package struct UnresolvedInjectionSite {
 package struct UnreachableView {
     package let path: String
     package let name: NodeName
+    package let message: String
 }
 
 package struct Analysis {
@@ -119,7 +120,6 @@ extension Analysis {
     package init(_ written: consuming [SummarizedFile], options: AnalysisOptions) {
         let graph = LinkedGraph(written, options: options)
         let index = graph.index
-        let reachable = Reachability(links: graph.links)
         let unresolved = graph.unresolved
         var report = DiagnosticReport(
             files: graph.files,
@@ -131,7 +131,7 @@ extension Analysis {
         )
         report.addRootFindings()
         if options.legacySheets {
-            report.addLegacySheetFindings(reachable: reachable.nodes)
+            report.addLegacySheetFindings(reachable: Reachability(links: graph.links, from: index.roots.indices).nodes)
         }
         let keys = TrappingKeys(graph.files, suppressions: graph.suppressions)
         let audit = SuppressionAudit(
@@ -142,40 +142,24 @@ extension Analysis {
             needs: graph.needs,
         )
         let views = index.nodes.indices.filter { index.nodes[$0].isView }
-        let unreachable = views.filter { !reachable.nodes.contains($0) }
-        let unchecked = unreachable.compactMap { Self.uncheckedWarning(index.nodes[$0]) }
+        let unchecked = UncheckedViews(views: views, index: index, links: graph.links, previews: options.previews)
         self.init(
-            diagnostics: report.diagnostics + keys.diagnostics + audit.diagnostics + unchecked,
+            diagnostics: report.diagnostics + keys.diagnostics + audit.diagnostics + unchecked.diagnostics,
             stats: GraphStats(
                 views: views.count,
                 edges: graph.links.nodes.joined().count + graph.links.roots.joined().count,
                 requirements: index.nodes.reduce(0) { $0 + $1.requirements.count },
                 roots: index.roots.count,
-                reachableViews: views.count - unreachable.count,
+                reachableViews: views.count - unchecked.unreachableCount,
                 uncheckedViews: unchecked.count,
                 unresolvedInjections: unresolved.count,
                 fixpointPasses: graph.needs.passes,
                 activeSuppressions: audit.active,
             ),
             unresolved: unresolved,
-            unreachableViews: unreachable.filter { index.nodes[$0].requirements.isEmpty }
-                .map {
-                    UnreachableView(path: index.nodes[$0].path, name: index.nodes[$0].name)
-                },
+            unreachableViews: unchecked.listed,
             unreadablePaths: graph.files.filter(\.summary.hasSyntaxErrors).map(\.file.path),
             findingsWithoutPath: report.findingsWithoutPath,
         )
-    }
-
-    private static func uncheckedWarning(_ view: GraphNode) -> Diagnostic? {
-        view.requirements.first.map { first in
-            Diagnostic(
-                path: first.source.path,
-                location: first.source.location,
-                severity: .warning,
-                message: "`\(view.name)` is unreachable from every App, preview and hosting root",
-                subject: view.name.description,
-            )
-        }
     }
 }
