@@ -102,8 +102,9 @@ view it checks that what the view reads from the environment was put there somew
 A view that reads from the environment but that none of those starting points shows stays unchecked. Each one
 gets a warning, `` `Leaf` is unreachable from every App, preview and hosting root ``, and the summary line counts
 them as unchecked views. Warnings leave the build passing. When the checked files have no `App`, widget or hosting
-root, as when a package is checked on its own, the views get one warning instead, `` 22 views that read the
-environment are unchecked; run Snagless on the app that shows them ``, and `--verbose` lists them.
+root, as when a package is checked on its own, the views get one warning instead, at the first of them:
+`` `StatusDetailView` and 21 other views that read the environment are unchecked; run Snagless on the app that
+shows them ``. `--verbose` lists them.
 
 A view needs a value when it declares `@Environment(Cart.self)` or `@EnvironmentObject`, and Snagless reports
 the declaration. A view with `@Environment(Cart.self)` crashes as soon as SwiftUI draws it; a view with

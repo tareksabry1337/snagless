@@ -31,17 +31,28 @@ struct UncheckedViews {
             listed = unreachable.filter(\.requirements.isEmpty).map { Self.listed($0, message: message) }
             return
         }
-        let views = count == 1 ? "1 view that reads the environment is" : "\(count) views that read the environment are"
         diagnostics = [
             Diagnostic(
                 path: anchor.path,
                 location: anchor.location,
                 severity: .warning,
-                message: "\(views) unchecked; run Snagless on the app that shows them",
+                message: Self.oneWarning(naming: anchor.subject, others: count - 1),
                 subject: "",
             )
         ]
         listed = unreachable.map { Self.listed($0, message: message) }
+    }
+
+    private static func oneWarning(naming view: String, others: Int) -> String {
+        switch others {
+        case 0:
+            "`\(view)` reads the environment and is unchecked; run Snagless on the app that shows it"
+        case 1:
+            "`\(view)` and 1 other view that read the environment are unchecked; run Snagless on the app that shows them"
+        default:
+            "`\(view)` and \(others) other views that read the environment are unchecked; "
+                + "run Snagless on the app that shows them"
+        }
     }
 
     private static func unreachableMessage(previews: PreviewMode) -> (NodeName) -> String {

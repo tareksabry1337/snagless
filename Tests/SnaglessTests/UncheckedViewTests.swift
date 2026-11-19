@@ -69,7 +69,7 @@ struct UncheckedViewTests {
         let project = TestProject(["Leaf.swift": Fixture.leafView, "Badge.swift": badge].merging(extra) { $1 })
         #expect(
             project.errors() == [
-                "Badge.swift:1:50: warning: 2 views that read the environment are unchecked; "
+                "Badge.swift:1:50: warning: `Badge` and 1 other view that read the environment are unchecked; "
                     + "run Snagless on the app that shows them"
             ]
         )
