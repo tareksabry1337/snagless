@@ -1,6 +1,14 @@
 <p align="center"><img src=".github/icon.svg" width="128" height="128" alt="Snagless"></p>
 
-# Snagless
+<h1 align="center">Snagless</h1>
+
+<p align="center">
+  <a href="https://github.com/tareksabry1337/snagless/actions/workflows/ci.yml"><img src="https://github.com/tareksabry1337/snagless/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"></a>
+  <a href="https://github.com/tareksabry1337/snagless/releases/latest"><img src="https://img.shields.io/github/v/release/tareksabry1337/snagless" alt="Release"></a>
+  <img src="https://img.shields.io/badge/Swift-6.0%2B-F05138?logo=swift&amp;logoColor=white" alt="Swift 6.0+">
+  <img src="https://img.shields.io/badge/macOS-13%2B-000000?logo=apple&amp;logoColor=white" alt="macOS 13+">
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/tareksabry1337/snagless" alt="MIT license"></a>
+</p>
 
 Snagless finds SwiftUI environment crashes before your users do.
 
