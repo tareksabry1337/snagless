@@ -85,10 +85,12 @@ extension, on a path it skips, which the ignore comment below handles.
 
 **Speed.** Median of seven runs on an M1 Pro:
 
-- IceCubes, 431 files: 92 ms
-- a generated app with 500 views: 37 ms
-- 2,000 views: 126 ms
-- 10,000 views: 584 ms
+| App           | Size                 | Time   |
+| ------------- | -------------------- | ------ |
+| IceCubes      | 431 files, 212 views | 92 ms  |
+| Generated app | 500 views            | 37 ms  |
+| Generated app | 2,000 views          | 126 ms |
+| Generated app | 10,000 views         | 584 ms |
 
 ## What it checks
 
