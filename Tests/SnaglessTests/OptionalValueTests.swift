@@ -87,6 +87,18 @@ struct OptionalValueTests {
     }
 
     @Test
+    func unwrappedTopLevelFunctionReturningAnOptionalStaysUnresolved() {
+        InjectedValueTests.expectUnresolved(
+            TestProject([
+                "App.swift": InjectedValueTests.app(injecting: "makeCart()!"),
+                "MakeCart.swift": "func makeCart() -> Cart? { Cart() }",
+                "Leaf.swift": Fixture.leafView,
+            ]),
+            "makeCart()!",
+        )
+    }
+
+    @Test
     func providesCommentCoversAnOptionalValue() {
         let app = """
             @main struct MyApp: App {

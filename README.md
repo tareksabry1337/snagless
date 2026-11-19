@@ -101,7 +101,9 @@ view it checks that what the view reads from the environment was put there somew
 
 A view that reads from the environment but that none of those starting points shows stays unchecked. Each one
 gets a warning, `` `Leaf` is unreachable from every App, preview and hosting root ``, and the summary line counts
-them as unchecked views. Warnings leave the build passing.
+them as unchecked views. Warnings leave the build passing. When the checked files have no `App`, widget or hosting
+root, as when a package is checked on its own, the views get one warning instead, `` 22 views that read the
+environment are unchecked; run Snagless on the app that shows them ``, and `--verbose` lists them.
 
 A view needs a value when it declares `@Environment(Cart.self)` or `@EnvironmentObject`, and Snagless reports
 the declaration. A view with `@Environment(Cart.self)` crashes as soon as SwiftUI draws it; a view with
@@ -199,7 +201,7 @@ wrong, a path is missing, or a file can't be read as UTF-8 text.
 - `--package DIR` checks a local Swift package, using the module names from its `Package.swift`, along with the
   local packages it depends on. Repeat it for more packages. Plain folders get module names from their layout.
 - `--previews error|warning|off` sets how problems that only happen in previews are reported. The default is
-  `error`.
+  `error`. With `off`, views that only previews show count as unchecked.
 - `--legacy-sheets` checks sheets, popovers and full-screen covers as if they start with an empty environment.
   Use it if your app supports iOS 13 or 14, where developers report that sheets start with an
   empty environment.
@@ -251,6 +253,8 @@ reason is the answer.
 - A `navigationDestination` inside a `NavigationSplitView` gets the environment of the split view, as one inside a
   `NavigationStack` gets the stack's. Snagless checks it against what the root provides instead, so a value
   provided on the split view is missed and the destination is reported.
+- A `navigationDestination` inside a `NavigationView` never presents on iOS 27. Snagless still checks it, so it
+  can report a view that never shows.
 - Macros stay unexpanded, so views and values a macro creates are invisible to Snagless.
 - Binary frameworks have no source: values they provide show up as unknown, and views they show are skipped.
 - A generic helper such as `func inject<T>(_ value: T) -> some View` hides what it provides.

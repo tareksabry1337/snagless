@@ -78,3 +78,10 @@ and resolve them in pass 2 with the same import rules as types.
 `func inject<T>(_ value: T) -> some View { environment(value) }` hides the provided type from Snagless, so
 `CartBadge().inject(Cart())` reports a missing `Cart`. Plan: record that the helper provides the type of its
 argument and resolve it at each call.
+
+## 11. Optional top-level functions
+
+A top-level function that returns an optional leaves the type unknown, so with `func makeCart() -> Cart?`,
+`.environment(makeCart()!)` reports a missing `Cart` even though the caller unwraps it
+(`unwrappedTopLevelFunctionReturningAnOptionalStaysUnresolved`). Plan: record the optional return type and apply
+the same unwrap rules as for properties (`if let`, `guard let`, `!`).
