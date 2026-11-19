@@ -3,7 +3,7 @@ import SnaglessModel
 import Foundation
 
 public enum Snagless {
-    static let version = "snagless 0.9.0"
+    static let version = "snagless 0.9.1"
 
     public static func main(arguments: [String]) -> Int32 {
         if arguments == ["--version"] {
