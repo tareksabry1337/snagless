@@ -8,7 +8,7 @@ struct UncheckedViewTests {
     @Test
     func viewWithRequirementsThatNoRootShowsIsAWarning() {
         let project = TestProject(["App.swift": Self.app, "Leaf.swift": Fixture.leafView])
-        #expect(project.errors() == ["Leaf.swift:2:41: warning: `Leaf` is unchecked: no root shows it"])
+        #expect(project.errors() == [Fixture.leafUnchecked])
         #expect(project.notes == [])
     }
 

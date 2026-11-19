@@ -82,7 +82,7 @@ struct SourceFileTests {
         #expect(byFolder.map(\.module) == ["Views", "Views", "Views"])
         #expect(
             TestProject(files: try SummaryBatch(fromGraph).files).errors() == [
-                "\(file("OtherDetail.swift")):1:59: warning: `Detail` is unchecked: no root shows it"
+                "\(file("OtherDetail.swift")):1:59: warning: `Detail` is unreachable from every App, preview and hosting root"
             ]
         )
         #expect(

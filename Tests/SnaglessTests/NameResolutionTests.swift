@@ -17,7 +17,9 @@ struct NameResolutionTests {
                 "Other": ["Other/Detail.swift": other],
                 "App": ["App/Detail.swift": mine, "App/App.swift": Fixture.app(showing: "Detail()")],
             ])
-            .errors() == ["Other/Detail.swift:2:41: warning: `Detail` is unchecked: no root shows it"]
+            .errors() == [
+                "Other/Detail.swift:2:41: warning: `Detail` is unreachable from every App, preview and hosting root"
+            ]
         )
     }
 
@@ -108,7 +110,10 @@ struct NameResolutionTests {
     }
 
     @Test(arguments: [
-        ("Badge()", ["Shop/Shop.swift:2:65: warning: `Badge` is unchecked: no root shows it"]),
+        (
+            "Badge()",
+            ["Shop/Shop.swift:2:65: warning: `Badge` is unreachable from every App, preview and hosting root"],
+        ),
         (
             "Shop.Badge()",
             [

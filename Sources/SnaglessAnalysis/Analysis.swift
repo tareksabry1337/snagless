@@ -173,7 +173,7 @@ extension Analysis {
                 path: first.source.path,
                 location: first.source.location,
                 severity: .warning,
-                message: "`\(view.name)` is unchecked: no root shows it",
+                message: "`\(view.name)` is unreachable from every App, preview and hosting root",
                 subject: view.name.description,
             )
         }

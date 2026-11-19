@@ -20,7 +20,8 @@ enum Fixture {
         }
         """
 
-    static let leafUnchecked = "Leaf.swift:2:41: warning: `Leaf` is unchecked: no root shows it"
+    static let leafUnchecked =
+        "Leaf.swift:2:41: warning: `Leaf` is unreachable from every App, preview and hosting root"
 
     static let leafMissingCartFromApp =
         "App.swift:1:64: error: `Leaf` needs `Cart`: App `MyApp` → Leaf (Leaf.swift:2)"
