@@ -124,7 +124,7 @@ struct HelperMemberTests {
             TestProject([
                 "App.swift": Fixture.app(showing: "Screen()"), "Screen.swift": screen, "Leaf.swift": Fixture.leafView,
             ])
-            .errors() == []
+            .errors() == [Fixture.leafUnchecked]
         )
         #expect(
             TestProject([

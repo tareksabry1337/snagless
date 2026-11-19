@@ -17,7 +17,7 @@ struct NameResolutionTests {
                 "Other": ["Other/Detail.swift": other],
                 "App": ["App/Detail.swift": mine, "App/App.swift": Fixture.app(showing: "Detail()")],
             ])
-            .errors() == []
+            .errors() == ["Other/Detail.swift:2:41: warning: `Detail` is unchecked: no root shows it"]
         )
     }
 
@@ -70,7 +70,7 @@ struct NameResolutionTests {
     }
 
     @Test(arguments: [
-        ("Outer.Screen()", []),
+        ("Outer.Screen()", [Fixture.leafUnchecked]),
         (
             "Outer.Extended()",
             [
@@ -108,7 +108,7 @@ struct NameResolutionTests {
     }
 
     @Test(arguments: [
-        ("Badge()", []),
+        ("Badge()", ["Shop/Shop.swift:2:65: warning: `Badge` is unchecked: no root shows it"]),
         (
             "Shop.Badge()",
             [

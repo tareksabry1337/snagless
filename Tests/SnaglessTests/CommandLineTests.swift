@@ -58,7 +58,7 @@ struct CommandLineTests {
         #expect(
             Snagless.summaryLine(analysis, fileCount: 1, errors: 1, warnings: 2)
                 == "snagless: 1 file (0 with syntax errors), 1 view, 1 edge, 1 requirement, 1 root, "
-                + "1 reachable view, 0 unresolved injections, 1 fixpoint pass, 1 error, 2 warnings, "
+                + "1 reachable view, 0 unchecked views, 0 unresolved injections, 1 fixpoint pass, 1 error, 2 warnings, "
                 + "0 ignored by comments\n"
         )
         let nested = TestProject([
@@ -70,7 +70,8 @@ struct CommandLineTests {
         #expect(
             Snagless.summaryLine(nestedAnalysis, fileCount: 3, errors: 0, warnings: 0)
                 == "snagless: 3 files (0 with syntax errors), 2 views, 2 edges, 1 requirement, 1 root, "
-                + "2 reachable views, 0 unresolved injections, 2 fixpoint passes, 0 errors, 0 warnings, "
+                + "2 reachable views, 0 unchecked views, 0 unresolved injections, 2 fixpoint passes, 0 errors, "
+                + "0 warnings, "
                 + "0 ignored by comments\n"
         )
     }

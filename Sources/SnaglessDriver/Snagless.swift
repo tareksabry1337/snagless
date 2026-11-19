@@ -97,6 +97,7 @@ public enum Snagless {
             counted(stats.requirements, "requirement"),
             counted(stats.roots, "root"),
             counted(stats.reachableViews, "reachable view"),
+            counted(stats.uncheckedViews, "unchecked view"),
             counted(stats.unresolvedInjections, "unresolved injection"),
             counted(stats.fixpointPasses, "fixpoint pass", plural: "fixpoint passes"),
             counted(errors, "error"),

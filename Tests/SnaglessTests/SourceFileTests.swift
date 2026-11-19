@@ -80,7 +80,11 @@ struct SourceFileTests {
         #expect(fromGraph.map(\.module) == ["App", "App", "Other"])
         let byFolder = SourceFile.list([root.path])
         #expect(byFolder.map(\.module) == ["Views", "Views", "Views"])
-        #expect(TestProject(files: try SummaryBatch(fromGraph).files).errors() == [])
+        #expect(
+            TestProject(files: try SummaryBatch(fromGraph).files).errors() == [
+                "\(file("OtherDetail.swift")):1:59: warning: `Detail` is unchecked: no root shows it"
+            ]
+        )
         #expect(
             TestProject(files: try SummaryBatch(byFolder).files).errors() == [
                 "\(file("App.swift")):1:64: error: `Detail` needs `Cart`: "

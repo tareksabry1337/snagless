@@ -51,6 +51,7 @@ package struct GraphStats {
     package let requirements: Int
     package let roots: Int
     package let reachableViews: Int
+    package let uncheckedViews: Int
     package let unresolvedInjections: Int
     package let fixpointPasses: Int
     package let activeSuppressions: Int
@@ -141,25 +142,40 @@ extension Analysis {
             needs: graph.needs,
         )
         let views = index.nodes.indices.filter { index.nodes[$0].isView }
+        let unreachable = views.filter { !reachable.nodes.contains($0) }
+        let unchecked = unreachable.compactMap { Self.uncheckedWarning(index.nodes[$0]) }
         self.init(
-            diagnostics: report.diagnostics + keys.diagnostics + audit.diagnostics,
+            diagnostics: report.diagnostics + keys.diagnostics + audit.diagnostics + unchecked,
             stats: GraphStats(
                 views: views.count,
                 edges: graph.links.nodes.joined().count + graph.links.roots.joined().count,
                 requirements: index.nodes.reduce(0) { $0 + $1.requirements.count },
                 roots: index.roots.count,
-                reachableViews: views.filter(reachable.nodes.contains).count,
+                reachableViews: views.count - unreachable.count,
+                uncheckedViews: unchecked.count,
                 unresolvedInjections: unresolved.count,
                 fixpointPasses: graph.needs.passes,
                 activeSuppressions: audit.active,
             ),
             unresolved: unresolved,
-            unreachableViews: views.filter { !reachable.nodes.contains($0) }
+            unreachableViews: unreachable.filter { index.nodes[$0].requirements.isEmpty }
                 .map {
                     UnreachableView(path: index.nodes[$0].path, name: index.nodes[$0].name)
                 },
             unreadablePaths: graph.files.filter(\.summary.hasSyntaxErrors).map(\.file.path),
             findingsWithoutPath: report.findingsWithoutPath,
         )
+    }
+
+    private static func uncheckedWarning(_ view: GraphNode) -> Diagnostic? {
+        view.requirements.first.map { first in
+            Diagnostic(
+                path: first.source.path,
+                location: first.source.location,
+                severity: .warning,
+                message: "`\(view.name)` is unchecked: no root shows it",
+                subject: view.name.description,
+            )
+        }
     }
 }

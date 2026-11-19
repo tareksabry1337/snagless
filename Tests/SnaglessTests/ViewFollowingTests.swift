@@ -227,7 +227,7 @@ struct ViewFollowingTests {
             TestProject([
                 "App.swift": Fixture.app(showing: "Screen()"), "Support.swift": support, "Leaf.swift": Fixture.leafView,
             ])
-            .errors() == []
+            .errors() == [Fixture.leafUnchecked]
         )
     }
 }
