@@ -1,7 +1,11 @@
 // swift-tools-version: 6.0
 import PackageDescription
 
-let releasedBinary: Target? = nil
+let releasedBinary: Target? = .binaryTarget(
+    name: "SnaglessBinary",
+    url: "https://github.com/tareksabry1337/snagless/releases/download/0.9.0/snagless.artifactbundle.zip",
+    checksum: "cb69c9ae6b25ba5c9b7c7d5d0a4449dca2eff0e0f9b42f69f5e9d92e613bbf7c"
+)
 let buildsToolFromSource = releasedBinary == nil || Context.environment["SNAGLESS_FROM_SOURCE"] != nil
 let binaryTargets = buildsToolFromSource ? [] : [releasedBinary].compactMap { $0 }
 
