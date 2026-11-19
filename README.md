@@ -60,18 +60,19 @@ Snagless only reads your source code, which keeps it quick: a 431-file app takes
 
 ## How well it works
 
-**Against SwiftUI itself.** RuntimeCases is a small app with 48 cases, each built around one way of showing a view
-or providing a value, and each run on the iOS 27 simulator to see whether it crashes. 29 crash and 19 render.
-Snagless reports 28 of the 29 crashes; the one it misses is a value provided inside an `#if` (see "Limits"). Of
-the 19 that render it stays quiet on 12 and reports 7:
+**Against SwiftUI itself.** RuntimeCases is a small app with 52 cases, each built around one way of showing a view
+or providing a value, and each run on the iOS 27 simulator to see whether it crashes. 31 crash and 21 render.
+Snagless reports 30 of the 31 crashes; the one it misses is a value provided inside an `#if` (see "Limits"). Of
+the 21 that render it stays quiet on 13 and reports 8:
 
 - 2 show the same view as a case that crashes, with only a runtime flag deciding whether the value is provided, so
   the report is right for the app: an `if` that provides the value only when the flag is on, and an `.if(flag)`
   helper that does the same.
 - 2 are reported by design. One is a view on a path the app skips, which is what ignore comments are for (see
   "When it's wrong"). The other declares an `@EnvironmentObject` it leaves unread (see "What it checks").
-- 3 are false positives, listed under "Limits": a hosting controller added as a child, a
-  `UIHostingConfiguration` cell, and a value provided inside a closure passed to your own helper.
+- 4 are false positives, listed under "Limits": a hosting controller added as a child, a
+  `UIHostingConfiguration` cell, a value provided inside a closure passed to your own helper, and a value provided
+  on a `NavigationSplitView` for a `navigationDestination` inside it.
 
 **Against generated apps.** The tests generate apps of 500 and 2,000 views with crashes added at random, and
 Snagless has to report exactly those crashes.
@@ -98,6 +99,10 @@ Snagless starts everywhere SwiftUI views come to life: your `App` scenes, previe
 hosted from UIKit or AppKit. From each of those it walks down through every view that can be shown, and at each
 view it checks that what the view reads from the environment was put there somewhere above it.
 
+A view that reads from the environment but that none of those starting points shows stays unchecked. Each one
+gets a warning, `` `Leaf` is unchecked: no root shows it ``, and the summary line counts them. Warnings leave the
+build passing.
+
 A view needs a value when it declares `@Environment(Cart.self)` or `@EnvironmentObject`, and Snagless reports
 the declaration. A view with `@Environment(Cart.self)` crashes as soon as SwiftUI draws it; a view with
 `@EnvironmentObject` crashes when it first reads the object. Each SwiftUI behaviour described here, apart from
@@ -106,7 +111,8 @@ widgets, has a case in RuntimeCases, run on the iOS 27 simulator. A value counts
 modifiers or `View` extensions.
 
 Snagless follows views through `body`, computed properties, helper methods, methods on other types that return
-views (a router's `view(for:)`, for example), generic wrapper views, sheets, navigation and other modules. A few
+views (a router's `view(for:)`, for example), your own `Scene` types, generic wrapper views, sheets, navigation and
+other modules. A view's `View` conformance or its `body` can be in an extension, in any file of the module. A few
 SwiftUI rules decide what a view gets:
 
 - A `navigationDestination` gets two things: the environment of its `NavigationStack`, and anything provided
@@ -120,6 +126,10 @@ SwiftUI rules decide what a view gets:
 To know what a value provides, Snagless needs its type in the source: an initializer, a property or local with a
 type, a declared static member, a chain of declared members, a function that declares its return type, `x as Cart`,
 or a ternary whose two sides have the same type. `--verbose` lists every line where the type stays unknown.
+
+An optional value, such as a `Cart?` property that starts as `nil`, counts as provided only once it is unwrapped
+with `if let`, `guard let` or `!`. SwiftUI accepts `.environment(cart)` with a `nil` cart, and the view that reads
+`Cart` then crashes, so Snagless treats the optional as a value of unknown type.
 
 ### Environment keys that crash
 
@@ -230,19 +240,27 @@ reason is the answer.
 - Every branch counts, including `#if`. A value provided in one branch of an `if`, or only under `#if DEBUG`,
   counts as provided everywhere, so a crash in another branch or in the Release build goes unreported.
   Requirements and views inside an `#if` are checked in every branch.
+- Your own `View` extensions that provide a value are matched by name only. Two `themed()` extensions in different
+  modules, or two overloads of `themed`, count as one that provides everything either provides, so a crash under
+  the one that provides nothing goes unreported.
+- An `@Observable` app delegate counts as provided in every `App` in the repository, not only in the `App` that
+  declares the adaptor, so with two apps in one repository a crash in the other app goes unreported.
 - Inside a representable, a hosting controller added as a child view controller and a `UIHostingConfiguration`
   cell both get the surrounding environment. Snagless treats them as starting empty, so it can report a false
   crash.
+- A `navigationDestination` inside a `NavigationSplitView` gets the environment of the split view, as one inside a
+  `NavigationStack` gets the stack's. Snagless checks it against what the root provides instead, so a value
+  provided on the split view is missed and the destination is reported.
 - Macros stay unexpanded, so views and values a macro creates are invisible to Snagless.
 - Binary frameworks have no source: values they provide show up as unknown, and views they show are skipped.
 - A generic helper such as `func inject<T>(_ value: T) -> some View` hides what it provides.
 - A value provided inside a closure you pass to your own helper, like `view.apply { $0.environment(cart) }`, is
   skipped, so the views inside can be reported even though they get it.
-- Views kept in a dictionary or registry and looked up at runtime are skipped. `--verbose` lists them as
-  unreachable.
+- Views kept in a dictionary or registry and looked up at runtime are skipped. Each one that reads from the
+  environment gets an "unchecked" warning.
 - Typealiases are left unresolved.
-- A function that returns `some`, `any` or a generic type, overloads that return different types, and methods from
-  protocol extensions leave the type unknown.
+- A function that returns `some`, `any` or a generic type, overloads that return different types, methods from
+  protocol extensions, and a top-level function that returns an optional leave the type unknown.
 - A call through a protocol counts as a call to every type that conforms to it.
 - A call whose argument labels match one overload only loosely, because of default arguments or a trailing
   closure, counts as a call to every overload with that name.
