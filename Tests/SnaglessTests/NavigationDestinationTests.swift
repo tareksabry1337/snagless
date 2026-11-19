@@ -84,6 +84,23 @@ struct NavigationDestinationTests {
         )
     }
 
+    @Test(arguments: [
+        "NavigationView { Declarer() }.environment(Cart.shared)",
+        "NavigationView { Declarer().environment(Cart.shared) }",
+        "NavigationView { Declarer() }",
+    ])
+    func destinationInsideANavigationViewIsCheckedAgainstTheRoot(root: String) {
+        let errors = TestProject([
+            "App.swift": Fixture.app(showing: "Root()"),
+            "Root.swift": "struct Root: View { var body: some View { \(root) } }",
+            "Declarer.swift": "struct Declarer: View { var body: some View { \(Self.destination) } }",
+            "Leaf.swift": Fixture.leafView,
+            "Cart.swift": Fixture.cart,
+        ])
+        .errors()
+        #expect(errors == [Self.missingCart(path: "Root → Declarer → navigationDestination → Leaf")])
+    }
+
     private static func missingCart(path: String) -> String {
         "App.swift:1:64: error: `Leaf` needs `Cart`: App `MyApp` → \(path) (Leaf.swift:2)"
     }

@@ -257,7 +257,7 @@ reason is the answer.
 - A value provided inside a closure you pass to your own helper, like `view.apply { $0.environment(cart) }`, is
   skipped, so the views inside can be reported even though they get it.
 - Views kept in a dictionary or registry and looked up at runtime are skipped. Each one that reads from the
-  environment gets an "unchecked" warning.
+  environment gets a warning that it is unreachable.
 - Typealiases are left unresolved.
 - A function that returns `some`, `any` or a generic type, overloads that return different types, methods from
   protocol extensions, and a top-level function that returns an optional leave the type unknown.

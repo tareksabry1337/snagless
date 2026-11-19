@@ -97,6 +97,21 @@ struct RootTests {
         #expect(errors.allSatisfy { $0.hasSuffix(": error: `Leaf` needs `Cart`: App `MyApp` → Leaf (Leaf.swift:2)") })
     }
 
+    @Test(arguments: [
+        (
+            "struct P {}\nextension P: PreviewProvider { static var previews: some View { Leaf() } }",
+            "P.swift:2:65: error: `Leaf` needs `Cart`: preview `P` → Leaf (Leaf.swift:2)",
+        ),
+        (
+            "struct W {}\nextension W: Widget { var body: some WidgetConfiguration { "
+                + "StaticConfiguration(kind: \"k\", provider: Provider()) { _ in Leaf() } } }",
+            "P.swift:2:120: error: `Leaf` needs `Cart`: widget `W` → Leaf (Leaf.swift:2)",
+        ),
+    ])
+    func previewOrWidgetConformanceInAnExtensionIsARoot(source: String, expected: String) {
+        #expect(TestProject(["P.swift": source, "Leaf.swift": Fixture.leafView]).errors() == [expected])
+    }
+
     @Test
     func hostingControllerStartsEmptyAndIsNotAChildOfItsView() {
         let parent = """
