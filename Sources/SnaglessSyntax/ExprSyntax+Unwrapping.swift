@@ -20,11 +20,11 @@ extension ExprSyntax {
         }
     }
 
-    var isForceUnwrapped: Bool {
+    var forceUnwrappedOperand: ExprSyntax? {
         var current = self
         while true {
-            if current.is(ForceUnwrapExprSyntax.self) {
-                return true
+            if let operand = current.as(ForceUnwrapExprSyntax.self)?.expression {
+                return operand
             }
             if let next = current.as(TryExprSyntax.self)?.expression ?? current.as(AwaitExprSyntax.self)?.expression {
                 current = next
@@ -33,8 +33,25 @@ extension ExprSyntax {
             {
                 current = only.expression
             } else {
-                return false
+                return nil
             }
+        }
+    }
+
+    var chainsOptionally: Bool {
+        switch self.as(ExprSyntaxEnum.self) {
+        case .optionalChainingExpr:
+            return true
+        case .memberAccessExpr(let access):
+            return access.base?.chainsOptionally ?? false
+        case .functionCallExpr(let call):
+            return call.calledExpression.chainsOptionally
+        case .subscriptCallExpr(let call):
+            return call.calledExpression.chainsOptionally
+        case .forceUnwrapExpr(let unwrap):
+            return unwrap.expression.chainsOptionally
+        default:
+            return false
         }
     }
 

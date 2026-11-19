@@ -6,6 +6,8 @@ struct OptionalValueTests {
         final class Store {
             var cart: Cart?
             var wallet: Wallet?
+            let basket = Cart()
+            func makeCart() -> Cart { Cart() }
         }
         final class Wallet {
             let cart = Cart()
@@ -21,6 +23,7 @@ struct OptionalValueTests {
         ("store.cart", "let store = Store()"),
         ("store?.cart", "let store: Store? = nil"),
         ("store.wallet?.cart", "let store = Store()"),
+        ("store?.wallet!.cart", "let store: Store? = nil"),
     ])
     func optionalValueStaysUnresolved(expression: String, members: String) {
         InjectedValueTests.expectUnresolved(
@@ -37,6 +40,8 @@ struct OptionalValueTests {
         ("cart!", "@State private var cart: Cart?"),
         ("store.cart!", "let store = Store()"),
         ("store.wallet!.cart", "let store = Store()"),
+        ("store.basket", "var store: Store!"),
+        ("store.makeCart()", "var store: Store!"),
     ])
     func forceUnwrappedValueResolves(expression: String, members: String) {
         InjectedValueTests.expectResolved(

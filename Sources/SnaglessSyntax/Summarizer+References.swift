@@ -47,7 +47,8 @@ extension Summarizer {
 
     func valueReference(_ expression: ExprSyntax, scope: Scope) -> ValueReference? {
         let reference = possiblyOptionalReference(expression.unwrapped, scope: scope)
-        return expression.isForceUnwrapped ? reference?.asUnwrapped : reference
+        guard let operand = expression.forceUnwrappedOperand, !operand.chainsOptionally else { return reference }
+        return reference?.asUnwrapped
     }
 
     private func possiblyOptionalReference(_ expression: ExprSyntax, scope: Scope) -> ValueReference? {
@@ -120,7 +121,7 @@ extension Summarizer {
         let baseReference =
             base.isSelf ? enclosingType(scope).map(ValueReference.type) : valueReference(base, scope: scope)
         let extended = baseReference.map { Self.extending($0, with: access.declName.baseName.text) }
-        return base.is(OptionalChainingExprSyntax.self) ? extended?.asOptional : extended
+        return base.chainsOptionally ? extended?.asOptional : extended
     }
 
     private static func extending(_ reference: ValueReference, with member: String) -> ValueReference {
@@ -138,9 +139,7 @@ extension Summarizer {
                     topLevelReturnType: call.topLevelReturnType,
                 )
             )
-        case .optional(let wrapped):
-            return extending(wrapped, with: member).asOptional
-        case .unwrapped(let wrapped):
+        case .optional(let wrapped), .unwrapped(let wrapped):
             return extending(wrapped, with: member)
         }
     }
