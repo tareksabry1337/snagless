@@ -112,8 +112,8 @@ modifiers or `View` extensions.
 
 Snagless follows views through `body`, computed properties, helper methods, methods on other types that return
 views (a router's `view(for:)`, for example), your own `Scene` types, generic wrapper views, sheets, navigation and
-other modules. A view's `View` conformance or its `body` can be in an extension, in any file of the module. A few
-SwiftUI rules decide what a view gets:
+other modules. The `View` or `App` conformance and the `body` can be in an extension, in any file of the module.
+A few SwiftUI rules decide what a view gets:
 
 - A `navigationDestination` gets two things: the environment of its `NavigationStack`, and anything provided
   inside its own closure.

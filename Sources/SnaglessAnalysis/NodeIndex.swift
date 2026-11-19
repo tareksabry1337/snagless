@@ -95,7 +95,7 @@ struct NodeIndex {
                 roots.append(FileRoot(summary: root, file: file))
             }
             for node in summarized.summary.nodes {
-                guard case .member(let owner, _) = node.name, appTypes.contains(owner) else { continue }
+                guard let owner = node.name.owner, appTypes.contains(owner) else { continue }
                 let scene = RootSummary(
                     origin: .app(owner),
                     scope: node.scope,
@@ -120,7 +120,7 @@ struct NodeIndex {
         for (file, summarized) in files.enumerated() {
             for node in summarized.summary.nodes {
                 switch node.name {
-                case .member(let owner, _) where appTypes.contains(owner):
+                case _ where node.name.owner.map(appTypes.contains) == true:
                     continue
                 case .type(let type) where !types.isView(type):
                     continue
@@ -168,6 +168,17 @@ struct NodeIndex {
         }
         guard case .member(let owner, let member) = name else { return [] }
         return labelledMembers[MemberBase(owner: owner, base: member.base), default: []]
+    }
+}
+
+extension NodeName {
+    var owner: TypeName? {
+        switch self {
+        case .type(let type), .member(let type, _):
+            type
+        case .extensionFunction:
+            nil
+        }
     }
 }
 

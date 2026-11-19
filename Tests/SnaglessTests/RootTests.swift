@@ -82,6 +82,21 @@ struct RootTests {
         )
     }
 
+    private static let conformingScenes = "extension MyApp: App { var body: some Scene { WindowGroup { Leaf() } } }"
+    private static let plainScenes = "extension MyApp { var body: some Scene { WindowGroup { Leaf() } } }"
+
+    @Test(arguments: [
+        ["App.swift": "@main struct MyApp {}\n" + conformingScenes],
+        ["App.swift": "@main struct MyApp: App {}\n" + plainScenes],
+        ["App.swift": "@main struct MyApp {}", "Scenes.swift": conformingScenes],
+        ["App.swift": "@main struct MyApp: App {}", "Scenes.swift": plainScenes],
+    ])
+    func appWithItsConformanceOrBodyInAnExtensionIsARoot(sources: [String: String]) {
+        let errors = TestProject(sources.merging(["Leaf.swift": Fixture.leafView]) { $1 }).errors()
+        #expect(errors.count == 1)
+        #expect(errors.allSatisfy { $0.hasSuffix(": error: `Leaf` needs `Cart`: App `MyApp` → Leaf (Leaf.swift:2)") })
+    }
+
     @Test
     func hostingControllerStartsEmptyAndIsNotAChildOfItsView() {
         let parent = """

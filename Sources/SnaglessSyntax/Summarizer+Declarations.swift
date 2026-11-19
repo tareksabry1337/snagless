@@ -15,17 +15,7 @@ extension Summarizer {
         declareType(type, kind: .value, inherited: inherited, members: decl.memberBlock, scope: scope, isView: isView)
         let location = location(of: decl.name)
         let requirements = requirements(decl.memberBlock, scope: scope)
-        let rootOrigin: RootOrigin? =
-            if Self.conforms(inherited, to: ["App"]) {
-                .app(type)
-            } else if Self.conforms(inherited, to: ["PreviewProvider"]) {
-                .preview(title: type.path)
-            } else if Self.conforms(inherited, to: ["Widget"]) {
-                .widget(name: type.path)
-            } else {
-                nil
-            }
-        if let rootOrigin {
+        if let rootOrigin = Self.rootOrigin(type, inherited: inherited) {
             scope.sink = .root(appendRoot(RootSummary(origin: rootOrigin, scope: scope.lexical, location: location)))
         } else if isView {
             scope = viewScope(type, inherited: inherited, requirements: requirements, location: location, scope: scope)
@@ -37,6 +27,18 @@ extension Summarizer {
             scope.memberOwner = type
         }
         summarizeMembers(decl.memberBlock, scope: scope)
+    }
+
+    private static func rootOrigin(_ type: TypeName, inherited: [TypeName]) -> RootOrigin? {
+        if conforms(inherited, to: ["App"]) {
+            .app(type)
+        } else if conforms(inherited, to: ["PreviewProvider"]) {
+            .preview(title: type.path)
+        } else if conforms(inherited, to: ["Widget"]) {
+            .widget(name: type.path)
+        } else {
+            nil
+        }
     }
 
     private static func conforms(_ inherited: [TypeName], to names: Set<String>) -> Bool {
@@ -162,14 +164,11 @@ extension Summarizer {
         if framework == "EnvironmentValues" {
             recordEnvironmentValues(decl.memberBlock, scope: scope)
         }
-        if isView {
-            scope = viewScope(
-                type,
-                inherited: inherited,
-                requirements: [],
-                location: location(of: decl.extendedType),
-                scope: scope,
-            )
+        let location = location(of: decl.extendedType)
+        if let rootOrigin = Self.rootOrigin(type, inherited: inherited) {
+            scope.sink = .root(appendRoot(RootSummary(origin: rootOrigin, scope: scope.lexical, location: location)))
+        } else if isView {
+            scope = viewScope(type, inherited: inherited, requirements: [], location: location, scope: scope)
         } else {
             scope.memberOwner = type
         }
