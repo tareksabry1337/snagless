@@ -11,18 +11,16 @@ extension Summarizer {
         )
         let type = TypeName(path: scope.chain[0])
         let inherited = inheritedTypes(decl.inheritanceClause, scope: scope)
-        func conforms(to names: Set<String>) -> Bool {
-            inherited.contains { TypeReference.names($0.path, oneOf: names) }
-        }
-        let isView = conforms(to: SwiftUIAPI.viewConformances)
+        let isView = Self.conforms(inherited, to: SwiftUIAPI.viewConformances)
         declareType(type, kind: .value, inherited: inherited, members: decl.memberBlock, scope: scope, isView: isView)
         let location = location(of: decl.name)
+        let requirements = requirements(decl.memberBlock, scope: scope)
         let rootOrigin: RootOrigin? =
-            if conforms(to: ["App"]) {
+            if Self.conforms(inherited, to: ["App"]) {
                 .app(type)
-            } else if conforms(to: ["PreviewProvider"]) {
+            } else if Self.conforms(inherited, to: ["PreviewProvider"]) {
                 .preview(title: type.path)
-            } else if conforms(to: ["Widget"]) {
+            } else if Self.conforms(inherited, to: ["Widget"]) {
                 .widget(name: type.path)
             } else {
                 nil
@@ -30,22 +28,59 @@ extension Summarizer {
         if let rootOrigin {
             scope.sink = .root(appendRoot(RootSummary(origin: rootOrigin, scope: scope.lexical, location: location)))
         } else if isView {
-            let node = NodeSummary(
-                name: .type(type),
-                isViewModifier: conforms(to: ["ViewModifier"]),
-                scope: scope.lexical,
-                location: location,
-                requirements: requirements(decl.memberBlock, scope: scope),
-            )
-            scope.sink = .node(appendNode(node))
-            scope.memberOwner = type
-            scope.ownerIsView = true
-            scope.ownerMakesControllers = conforms(to: SwiftUIAPI.controllerRepresentables)
+            scope = viewScope(type, inherited: inherited, requirements: requirements, location: location, scope: scope)
             scope.slotNames = contentSlotNames(decl)
         } else {
+            if !requirements.isEmpty {
+                appendTypeNode(type, requirements: requirements, location: location, scope: scope)
+            }
             scope.memberOwner = type
         }
         summarizeMembers(decl.memberBlock, scope: scope)
+    }
+
+    private static func conforms(_ inherited: [TypeName], to names: Set<String>) -> Bool {
+        inherited.contains { TypeReference.names($0.path, oneOf: names) }
+    }
+
+    private func viewScope(
+        _ type: TypeName,
+        inherited: [TypeName],
+        requirements: [Requirement],
+        location: SnaglessModel.SourceLocation,
+        scope: Scope,
+    ) -> Scope {
+        var viewScope = scope
+        let node = NodeSummary(
+            name: .type(type),
+            isViewModifier: Self.conforms(inherited, to: ["ViewModifier"]),
+            scope: scope.lexical,
+            location: location,
+            requirements: requirements,
+        )
+        viewScope.sink = .node(appendNode(node))
+        viewScope.memberOwner = type
+        viewScope.ownerIsView = true
+        viewScope.ownerMakesControllers = Self.conforms(inherited, to: SwiftUIAPI.controllerRepresentables)
+        return viewScope
+    }
+
+    @discardableResult
+    private func appendTypeNode(
+        _ type: TypeName,
+        requirements: [Requirement],
+        location: SnaglessModel.SourceLocation,
+        scope: Scope,
+    ) -> Int {
+        appendNode(
+            NodeSummary(
+                name: .type(type),
+                isViewModifier: false,
+                scope: scope.lexical,
+                location: location,
+                requirements: requirements,
+            )
+        )
     }
 
     func appendNode(_ node: NodeSummary) -> Int {
@@ -115,11 +150,29 @@ extension Summarizer {
             return
         }
         scope.properties = propertyTable(decl.memberBlock, scope: scope)
-        declareType(type, kind: .extension, inherited: inherited, members: decl.memberBlock, scope: scope)
+        let isView = Self.conforms(inherited, to: SwiftUIAPI.viewConformances)
+        declareType(
+            type,
+            kind: .extension,
+            inherited: inherited,
+            members: decl.memberBlock,
+            scope: scope,
+            isView: isView,
+        )
         if framework == "EnvironmentValues" {
             recordEnvironmentValues(decl.memberBlock, scope: scope)
         }
-        scope.memberOwner = type
+        if isView {
+            scope = viewScope(
+                type,
+                inherited: inherited,
+                requirements: [],
+                location: location(of: decl.extendedType),
+                scope: scope,
+            )
+        } else {
+            scope.memberOwner = type
+        }
         summarizeMembers(decl.memberBlock, scope: scope)
     }
 
@@ -271,17 +324,26 @@ extension Summarizer {
             }
             var memberScope = scope
             if let owner = scope.memberOwner,
-                let helper = helperName(member.decl, viewReturningOnly: !scope.ownerIsView),
-                helper.base != "body"
+                let helper = helperName(member.decl, viewReturningOnly: !scope.ownerIsView)
             {
-                let node = NodeSummary(
-                    name: .member(owner: owner, name: helper),
-                    isViewModifier: false,
-                    scope: scope.lexical,
-                    location: location(of: member.decl),
-                    requirements: [],
-                )
-                memberScope.sink = .node(appendNode(node))
+                if helper.base != "body" {
+                    let node = NodeSummary(
+                        name: .member(owner: owner, name: helper),
+                        isViewModifier: false,
+                        scope: scope.lexical,
+                        location: location(of: member.decl),
+                        requirements: [],
+                    )
+                    memberScope.sink = .node(appendNode(node))
+                } else if !scope.ownerIsView {
+                    let node = appendTypeNode(
+                        owner,
+                        requirements: [],
+                        location: location(of: member.decl),
+                        scope: scope,
+                    )
+                    memberScope.sink = .node(node)
+                }
             }
             summarize(decl, provided: [], scope: memberScope)
         }

@@ -15,7 +15,7 @@ enum SwiftUIAPI {
     ]
     static let controllerMakers: Set<String> = ["makeUIViewController", "makeNSViewController"]
     static let viewConformances = controllerRepresentables.union([
-        "View", "ViewModifier", "ToolbarContent", "Commands", "UIViewRepresentable", "NSViewRepresentable",
+        "View", "ViewModifier", "Scene", "ToolbarContent", "Commands", "UIViewRepresentable", "NSViewRepresentable",
     ])
     static let customModifier = "modifier"
 }

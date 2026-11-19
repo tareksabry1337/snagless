@@ -20,6 +20,9 @@ struct DeclaredTypes {
         var directConformers: [TypeName: [TypeName]] = [:]
         for type in files.flatMap(\.summary.types) {
             conformances[type.name, default: []].formUnion(type.inherited)
+            if type.isView {
+                views.insert(type.name)
+            }
             switch type.kind {
             case .extension:
                 continue
@@ -33,9 +36,6 @@ struct DeclaredTypes {
                 break
             }
             declared.insert(type.name)
-            if type.isView {
-                views.insert(type.name)
-            }
         }
         for (proto, members) in protocolMembers {
             for member in members {
@@ -73,6 +73,10 @@ struct DeclaredTypes {
 
     func isDeclaredNonView(_ type: TypeName) -> Bool {
         declared.contains(type) && !views.contains(type)
+    }
+
+    func isView(_ type: TypeName) -> Bool {
+        views.contains(type)
     }
 
     func isHosting(_ type: TypeName) -> Bool {

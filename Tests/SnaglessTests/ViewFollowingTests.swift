@@ -16,6 +16,69 @@ struct ViewFollowingTests {
     }
 
     @Test(arguments: [
+        ["Badge.swift": "struct Badge {\n    @Environment(Cart.self) private var cart\n}\n" + Self.badgeViewExtension],
+        [
+            "Badge.swift": "struct Badge {\n    @Environment(Cart.self) private var cart\n}",
+            "Badge+View.swift": Self.badgeViewExtension,
+        ],
+    ])
+    func viewConformanceInAnExtensionMakesAView(sources: [String: String]) {
+        #expect(
+            TestProject(sources.merging(["App.swift": Fixture.app(showing: "Badge()")]) { $1 }).errors() == [
+                "App.swift:1:64: error: `Badge` needs `Cart`: App `MyApp` → Badge (Badge.swift:2)"
+            ]
+        )
+    }
+
+    private static let badgeViewExtension = "extension Badge: View {\n    var body: some View { Text(\"badge\") }\n}"
+
+    @Test(arguments: [
+        "struct Badge {}\nextension Badge: View {\n    var body: some View { Leaf() }\n}",
+        "struct Badge {\n    var body: some View { Leaf() }\n}\nextension Badge: View {}",
+        "struct Badge: View {}\nextension Badge {\n    var body: some View { Leaf() }\n}",
+    ])
+    func bodyDeclaredApartFromTheConformanceIsFollowed(badge: String) {
+        #expect(
+            TestProject([
+                "App.swift": Fixture.app(showing: "Badge()"), "Badge.swift": badge, "Leaf.swift": Fixture.leafView,
+            ])
+            .errors() == [
+                "App.swift:1:64: error: `Leaf` needs `Cart`: App `MyApp` → Badge → Leaf (Leaf.swift:2)"
+            ]
+        )
+    }
+
+    @Test
+    func requirementOnAViewWithItsBodyInAnExtensionIsChecked() {
+        let badge = """
+            struct Badge: View {
+                @Environment(Cart.self) private var cart
+            }
+            extension Badge {
+                var body: some View { Text("badge") }
+            }
+            """
+        #expect(
+            TestProject(["App.swift": Fixture.app(showing: "Badge()"), "Badge.swift": badge]).errors() == [
+                "App.swift:1:64: error: `Badge` needs `Cart`: App `MyApp` → Badge (Badge.swift:2)"
+            ]
+        )
+    }
+
+    @Test
+    func typeThatNeverConformsToViewIsNotAView() {
+        let model = """
+            struct Model {
+                @Environment(Cart.self) private var cart
+                var body: some View { Text("model") }
+            }
+            """
+        let project = TestProject(["App.swift": Fixture.app(showing: "Model()"), "Model.swift": model])
+        #expect(project.errors() == [])
+        #expect(project.notes == [])
+    }
+
+    @Test(arguments: [
         (
             "Screens.leaf()",
             [

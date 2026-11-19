@@ -61,6 +61,7 @@ struct NodeIndex {
         var usedSuppressions: Set<SuppressionID> = []
         let nodes = Self.nodes(
             in: files,
+            types: types,
             appTypes: appTypes,
             suppressions: suppressions,
             usedSuppressions: &usedSuppressions,
@@ -109,6 +110,7 @@ struct NodeIndex {
 
     private static func nodes(
         in files: [SummarizedFile],
+        types: DeclaredTypes,
         appTypes: Set<TypeName>,
         suppressions: SuppressionIndex,
         usedSuppressions: inout Set<SuppressionID>,
@@ -117,8 +119,13 @@ struct NodeIndex {
         var byModule: [ModuleNode: Int] = [:]
         for (file, summarized) in files.enumerated() {
             for node in summarized.summary.nodes {
-                if case .member(let owner, _) = node.name, appTypes.contains(owner) {
+                switch node.name {
+                case .member(let owner, _) where appTypes.contains(owner):
                     continue
+                case .type(let type) where !types.isView(type):
+                    continue
+                case .type, .member, .extensionFunction:
+                    break
                 }
                 let key = ModuleNode(module: summarized.file.module, name: node.name)
                 let index = byModule[key] ?? nodes.count

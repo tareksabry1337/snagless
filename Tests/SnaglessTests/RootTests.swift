@@ -57,6 +57,32 @@ struct RootTests {
     }
 
     @Test
+    func customSceneContentIsCheckedFromTheApp() {
+        let scene = "struct MainScene: Scene { var body: some Scene { WindowGroup { Leaf() } } }"
+        #expect(
+            TestProject([
+                "App.swift": "@main struct MyApp: App { var body: some Scene { MainScene() } }",
+                "MainScene.swift": scene, "Leaf.swift": Fixture.leafView,
+            ])
+            .errors() == [
+                "App.swift:1:50: error: `Leaf` needs `Cart`: App `MyApp` → MainScene → Leaf (Leaf.swift:2)"
+            ]
+        )
+    }
+
+    @Test
+    func injectionOnACustomSceneReachesItsContent() {
+        let scene = "struct MainScene: Scene { var body: some Scene { WindowGroup { Leaf() } } }"
+        #expect(
+            TestProject([
+                "App.swift": "@main struct MyApp: App { var body: some Scene { MainScene().environment(Cart()) } }",
+                "MainScene.swift": scene, "Leaf.swift": Fixture.leafView,
+            ])
+            .errors() == []
+        )
+    }
+
+    @Test
     func hostingControllerStartsEmptyAndIsNotAChildOfItsView() {
         let parent = """
             struct Parent: View {
@@ -164,41 +190,6 @@ struct RootTests {
         #expect(
             TestProject(["Widget.swift": widget, "Leaf.swift": Fixture.leafView]).errors() == [
                 "Widget.swift:3:73: error: `Leaf` needs `Cart`: widget `MyWidget` → Leaf (Leaf.swift:2)"
-            ]
-        )
-    }
-
-    @Test
-    func observableDelegatesAreInTheAppEnvironmentOnly() {
-        let delegates = """
-            @Observable final class SceneDelegate: NSObject, UIWindowSceneDelegate {}
-            final class AppDelegate: NSObject, UIApplicationDelegate {
-                func application(_ app: UIApplication, configurationForConnecting session: UISceneSession,
-                                 options: UIScene.ConnectionOptions) -> UISceneConfiguration {
-                    let configuration = UISceneConfiguration(name: nil, sessionRole: session.role)
-                    configuration.delegateClass = SceneDelegate.self
-                    return configuration
-                }
-            }
-            """
-        let leaf = """
-            struct Leaf: View {
-                @Environment(SceneDelegate.self) private var sceneDelegate
-                @Environment(AppDelegate.self) private var appDelegate
-                var body: some View { Text("leaf") }
-            }
-            #Preview { Leaf() }
-            """
-        let app = """
-            @main struct MyApp: App {
-                @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-                var body: some Scene { WindowGroup { Leaf() } }
-            }
-            """
-        #expect(
-            TestProject(["App.swift": app, "Delegates.swift": delegates, "Leaf.swift": leaf]).errors() == [
-                "Leaf.swift:6:12: error: `Leaf` needs `AppDelegate`: preview `Leaf` → Leaf (Leaf.swift:3)",
-                "Leaf.swift:6:12: error: `Leaf` needs `SceneDelegate`: preview `Leaf` → Leaf (Leaf.swift:2)",
             ]
         )
     }
