@@ -72,6 +72,7 @@ package struct Analysis {
     package let unresolved: [UnresolvedInjectionSite]
     package let unreachableViews: [UnreachableView]
     package let unreadablePaths: [String]
+    package let findingsWithoutPath: Int
 }
 
 private struct LinkedGraph {
@@ -158,6 +159,7 @@ extension Analysis {
                     UnreachableView(path: index.nodes[$0].path, name: index.nodes[$0].name)
                 },
             unreadablePaths: graph.files.filter(\.summary.hasSyntaxErrors).map(\.file.path),
+            findingsWithoutPath: report.findingsWithoutPath,
         )
     }
 }

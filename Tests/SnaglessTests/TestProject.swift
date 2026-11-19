@@ -1,12 +1,23 @@
 import SnaglessAnalysis
 import SnaglessModel
 import SnaglessSyntax
+import Testing
 
 struct TestProject {
     let files: [SummarizedFile]
 
+    static func analyze(_ files: [SummarizedFile], options: AnalysisOptions = AnalysisOptions()) -> Analysis {
+        let analysis = Analysis(files, options: options)
+        #expect(analysis.findingsWithoutPath == 0)
+        return analysis
+    }
+
+    func analysis(options: AnalysisOptions = AnalysisOptions()) -> Analysis {
+        Self.analyze(files, options: options)
+    }
+
     func report(options: AnalysisOptions = AnalysisOptions()) -> Report {
-        Report(Analysis(files, options: options), verbose: true)
+        Report(analysis(options: options), verbose: true)
     }
 
     func errors(options: AnalysisOptions = AnalysisOptions()) -> [String] {

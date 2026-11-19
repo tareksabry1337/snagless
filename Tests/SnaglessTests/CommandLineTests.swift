@@ -54,7 +54,7 @@ struct CommandLineTests {
             "App.swift": "@main struct MyApp: App { var body: some Scene { WindowGroup { Leaf() } } }",
             "Leaf.swift": Fixture.leafView,
         ])
-        let analysis = Analysis(project.files, options: AnalysisOptions())
+        let analysis = project.analysis()
         #expect(
             Snagless.summaryLine(analysis, fileCount: 1, errors: 1, warnings: 2)
                 == "snagless: 1 file (0 with syntax errors), 1 view, 1 edge, 1 requirement, 1 root, "
@@ -66,7 +66,7 @@ struct CommandLineTests {
             "Badge.swift": "struct Badge: View { var body: some View { Leaf() } }",
             "Leaf.swift": Fixture.leafView,
         ])
-        let nestedAnalysis = Analysis(nested.files, options: AnalysisOptions())
+        let nestedAnalysis = nested.analysis()
         #expect(
             Snagless.summaryLine(nestedAnalysis, fileCount: 3, errors: 0, warnings: 0)
                 == "snagless: 3 files (0 with syntax errors), 2 views, 2 edges, 1 requirement, 1 root, "

@@ -74,7 +74,7 @@ struct GeneratedAppTests {
     func everyAddedViolationIsReportedAndNothingElse(views: Int, seed: Int) throws {
         let generated = try GeneratedApp(views: views, seed: seed)
         defer { generated.remove() }
-        let analysis = Analysis(try SummaryBatch(generated.sources).files, options: AnalysisOptions())
+        let analysis = TestProject.analyze(try SummaryBatch(generated.sources).files)
         #expect(generated.reportedViolations(analysis) == (try generated.expectedViolations()))
     }
 

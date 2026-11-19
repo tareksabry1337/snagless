@@ -42,6 +42,7 @@ struct DiagnosticReport {
     private let delegateTypes: Set<TypeName>
     private var reported: Set<Site> = []
     private(set) var diagnostics: [Diagnostic] = []
+    private(set) var findingsWithoutPath = 0
 
     init(
         files: [SummarizedFile],
@@ -110,10 +111,15 @@ struct DiagnosticReport {
         let path = files[edge.file].file.path
         let location = edge.location
         for need in edge.carry(needs.all[edge.node]).all.sorted() where !finding.rootProvides.contains(need) {
-            guard reported.insert(Site(path: path, location: location, need: need)).inserted,
-                let witness = witness(through: edge, need: need)
-            else { continue }
-            let message = "`\(witness.requiringView)` needs `\(need)`: \(finding.shownFrom) → \(witness)"
+            guard reported.insert(Site(path: path, location: location, need: need)).inserted else { continue }
+            let message: String
+            if let witness = witness(through: edge, need: need) {
+                message = "`\(witness.requiringView)` needs `\(need)`: \(finding.shownFrom) → \(witness)"
+            } else {
+                let shown = index.nodes[edge.node].name
+                message = "`\(need)` is missing below `\(shown)`: \(finding.shownFrom) → \(shown)"
+                findingsWithoutPath += 1
+            }
             diagnostics.append(
                 Diagnostic(
                     path: path,
