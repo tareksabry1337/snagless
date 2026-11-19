@@ -21,6 +21,7 @@ enum RuntimeCase: String, CaseIterable {
     case subclassUpcast
     case subclassEnvironmentObject
     case sceneEnvironment
+    case customScene
     case hostingConfigurationCell
     case hostingControllerChild
     case hostedViewUntakenBranch

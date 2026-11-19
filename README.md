@@ -60,10 +60,10 @@ Snagless only reads your source code, which keeps it quick: a 431-file app takes
 
 ## How well it works
 
-**Against SwiftUI itself.** RuntimeCases is a small app with 52 cases, each built around one way of showing a view
-or providing a value, and each run on the iOS 27 simulator to see whether it crashes. 31 crash and 21 render.
+**Against SwiftUI itself.** RuntimeCases is a small app with 53 cases, each built around one way of showing a view
+or providing a value, and each run on the iOS 27 simulator to see whether it crashes. 31 crash and 22 render.
 Snagless reports 30 of the 31 crashes; the one it misses is a value provided inside an `#if` (see "Limits"). Of
-the 21 that render it stays quiet on 13 and reports 8:
+the 22 that render it stays quiet on 14 and reports 8:
 
 - 2 show the same view as a case that crashes, with only a runtime flag deciding whether the value is provided, so
   the report is right for the app: an `if` that provides the value only when the flag is on, and an `.if(flag)`
@@ -100,8 +100,8 @@ hosted from UIKit or AppKit. From each of those it walks down through every view
 view it checks that what the view reads from the environment was put there somewhere above it.
 
 A view that reads from the environment but that none of those starting points shows stays unchecked. Each one
-gets a warning, `` `Leaf` is unchecked: no root shows it ``, and the summary line counts them. Warnings leave the
-build passing.
+gets a warning, `` `Leaf` is unreachable from every App, preview and hosting root ``, and the summary line counts
+them as unchecked views. Warnings leave the build passing.
 
 A view needs a value when it declares `@Environment(Cart.self)` or `@EnvironmentObject`, and Snagless reports
 the declaration. A view with `@Environment(Cart.self)` crashes as soon as SwiftUI draws it; a view with

@@ -24,7 +24,11 @@ struct RuntimeCasesTests {
 
         let files = try SummaryBatch(SourceFile.list([Self.folder.appendingPathComponent("RuntimeCases").path])).files
         let errors = TestProject(files: files).errors().filter { $0.contains(": error: ") }
-        let named = Set(errors.flatMap { $0.matches(of: /([A-Z]\w*)\./).map { String($0.output.1) } })
+        let named = Set(
+            errors.flatMap {
+                $0.replacing(/→[^(]*/, with: "").matches(of: /([A-Z]\w*)\./).map { String($0.output.1) }
+            }
+        )
         #expect(
             Set(namespaces.filter { named.contains($0.value) }.keys) == Set(rows.filter(\.reported).map(\.name))
         )

@@ -21,6 +21,7 @@ subclassInstance	crashed	reported
 subclassUpcast	rendered	quiet
 subclassEnvironmentObject	crashed	reported
 sceneEnvironment	rendered	quiet
+customScene	rendered	quiet
 hostingConfigurationCell	rendered	reported
 hostingControllerChild	rendered	quiet
 hostedViewUntakenBranch	rendered	reported

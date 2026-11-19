@@ -27,6 +27,7 @@ struct RuntimeCaseView: View {
         case .subclassUpcast: SubclassUpcast.Root()
         case .subclassEnvironmentObject: SubclassEnvironmentObject.Root()
         case .sceneEnvironment: SceneEnvironment.Reader()
+        case .customScene: CustomScene.Reader()
         case .hostingConfigurationCell: HostingConfigurationCell.Root()
         case .hostingControllerChild: HostingControllerChild.Root()
         case .hostedViewUntakenBranch: HostedViewUntakenBranch.Root()

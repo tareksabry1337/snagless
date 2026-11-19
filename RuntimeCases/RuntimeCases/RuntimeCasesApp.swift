@@ -10,9 +10,7 @@ struct RuntimeCasesApp: App {
     }
 
     var body: some Scene {
-        WindowGroup {
-            CaseBrowser(selected: LaunchArguments.runtimeCase)
-        }
-        .environment(SceneEnvironment.Model())
+        CustomScene.Cases()
+            .environment(SceneEnvironment.Model())
     }
 }
