@@ -22,8 +22,32 @@ package struct FunctionCall: Hashable {
     }
 }
 
-package enum ValueReference: Hashable {
+package indirect enum ValueReference: Hashable, Sendable {
     case type(TypeName)
     case memberChain(MemberChain)
     case call(FunctionCall)
+    case optional(Self)
+    case unwrapped(Self)
+
+    package var asOptional: Self {
+        switch self {
+        case .optional:
+            return self
+        case .unwrapped(let wrapped):
+            return .optional(wrapped)
+        case .type, .memberChain, .call:
+            return .optional(self)
+        }
+    }
+
+    package var asUnwrapped: Self {
+        switch self {
+        case .type, .unwrapped:
+            return self
+        case .optional(let wrapped):
+            return wrapped.asUnwrapped
+        case .memberChain, .call:
+            return .unwrapped(self)
+        }
+    }
 }

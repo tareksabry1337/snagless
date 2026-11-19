@@ -212,6 +212,7 @@ extension Summarizer {
         scope: Scope,
         isView: Bool = false,
     ) {
+        let table = members.map { memberTypes($0, scope: scope) } ?? MemberTable()
         summary.types.append(
             TypeSummary(
                 name: name,
@@ -219,7 +220,8 @@ extension Summarizer {
                 scope: scope.lexical,
                 isView: isView,
                 inherited: inherited,
-                memberTypes: members.map { memberTypes($0, scope: scope) } ?? [:],
+                memberTypes: table.types,
+                optionalMembers: table.optional,
                 crashingDefault: members.flatMap { crashingDefault(inherited, members: $0) },
             )
         )
@@ -366,21 +368,5 @@ extension Summarizer {
         let hasViewBuilder = attributes.contains(named: ["ViewBuilder", "SceneBuilder"])
         guard !hasViewBuilder, let returnType else { return hasViewBuilder }
         return TypeReference.names(TypeReference.path(of: returnType), oneOf: ["View", "AnyView", "Scene"])
-    }
-
-    private func memberTypes(_ members: MemberBlockSyntax, scope: Scope) -> [String: Set<TypeName>] {
-        var table: [String: Set<TypeName>] = [:]
-        for (name, reference) in scope.properties {
-            if case .type(let type) = reference {
-                table[name, default: []].insert(type)
-            }
-        }
-        for member in members.membersInEveryBranch {
-            guard let function = member.decl.as(FunctionDeclSyntax.self),
-                let type = concreteReturnType(of: function, scope: scope)
-            else { continue }
-            table[function.name.text, default: []].insert(type)
-        }
-        return table
     }
 }

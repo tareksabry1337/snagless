@@ -47,3 +47,7 @@ conditionalModifierFalse	crashed	reported
 closureHelper	rendered	reported
 readOnlyInAction	crashed	reported
 readOnlyInContextMenu	crashed	reported
+optionalValue	crashed	reported
+optionalValueUnwrapped	rendered	quiet
+splitViewDestinationInjectedBetween	crashed	reported
+splitViewDestinationInjectedOnSplitView	rendered	reported

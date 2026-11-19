@@ -113,37 +113,68 @@ struct DeclaredTypes {
 }
 
 struct MemberTypes {
+    private struct Value {
+        let type: TypeName
+        let mayBeNil: Bool
+    }
+
     private let table: [TypeName: [String: Set<TypeName>]]
+    private let optionalMembers: [TypeName: Set<String>]
 
     init(_ files: [SummarizedFile]) {
         var table: [TypeName: [String: Set<TypeName>]] = [:]
+        var optionalMembers: [TypeName: Set<String>] = [:]
         for type in files.flatMap(\.summary.types) where !type.memberTypes.isEmpty {
             table[type.name, default: [:]].merge(type.memberTypes) { $0.union($1) }
+            optionalMembers[type.name, default: []].formUnion(type.optionalMembers)
         }
         self.table = table
+        self.optionalMembers = optionalMembers
     }
 
     func type(of reference: ValueReference) -> TypeName? {
+        value(of: reference).flatMap { $0.mayBeNil ? nil : $0.type }
+    }
+
+    func typeIgnoringNil(of reference: ValueReference) -> TypeName? {
+        value(of: reference)?.type
+    }
+
+    private func value(of reference: ValueReference) -> Value? {
         switch reference {
         case .type(let type):
-            return type
+            return Value(type: type, mayBeNil: false)
         case .memberChain(let chain):
-            guard let first = chain.members.first else { return chain.base }
-            let start = table[chain.base]?[first]?.onlyElement
-            return start.flatMap { follow(chain.members.dropFirst(), from: $0) }
+            return follow(chain.members[...], from: chain.base)
         case .call(let call):
-            let start = call.owner.flatMap { table[$0]?[call.name] }.map(\.onlyElement) ?? call.topLevelReturnType
-            return start.flatMap { follow(call.members, from: $0) }
+            if let owner = call.owner, let start = table[owner]?[call.name] {
+                return start.onlyElement.flatMap {
+                    follow(call.members[...], from: Value(type: $0, mayBeNil: isOptional(call.name, of: owner)))
+                }
+            }
+            return call.topLevelReturnType.flatMap { follow(call.members[...], from: $0) }
+        case .optional(let wrapped):
+            return value(of: wrapped).map { Value(type: $0.type, mayBeNil: true) }
+        case .unwrapped(let wrapped):
+            return value(of: wrapped).map { Value(type: $0.type, mayBeNil: false) }
         }
     }
 
-    private func follow(_ members: some Sequence<String>, from start: TypeName) -> TypeName? {
+    private func follow(_ members: ArraySlice<String>, from start: TypeName) -> Value? {
+        follow(members, from: Value(type: start, mayBeNil: false))
+    }
+
+    private func follow(_ members: ArraySlice<String>, from start: Value) -> Value? {
         var current = start
         for member in members {
-            guard let next = table[current]?[member]?.onlyElement else { return nil }
-            current = next
+            guard let next = table[current.type]?[member]?.onlyElement else { return nil }
+            current = Value(type: next, mayBeNil: isOptional(member, of: current.type))
         }
         return current
+    }
+
+    private func isOptional(_ member: String, of owner: TypeName) -> Bool {
+        optionalMembers[owner, default: []].contains(member)
     }
 
     func type(providedBy provision: Provision) -> TypeName? {

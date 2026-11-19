@@ -5,7 +5,7 @@ struct InjectedValueTests {
     private static let missingCart =
         "error: `Leaf` needs `Cart`: App `MyApp` → Leaf (Leaf.swift:2)"
 
-    private static func app(injecting expression: String, members: String = "") -> String {
+    static func app(injecting expression: String, members: String = "") -> String {
         """
         @main struct MyApp: App {
             \(members)
@@ -19,12 +19,12 @@ struct InjectedValueTests {
             + "add `// snagless: provides Type` if it provides a checked type"
     }
 
-    private static func expectResolved(_ project: TestProject) {
+    static func expectResolved(_ project: TestProject) {
         #expect(project.errors() == [])
         #expect(project.notes == [])
     }
 
-    private static func expectUnresolved(_ project: TestProject, _ expression: String) {
+    static func expectUnresolved(_ project: TestProject, _ expression: String) {
         #expect(project.errors() == ["App.swift:3:42: " + missingCart])
         #expect(project.notes == [unresolvedNote(expression)])
     }

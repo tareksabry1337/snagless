@@ -1,6 +1,11 @@
 import SnaglessModel
 import SwiftSyntax
 
+struct MemberTable {
+    var types: [String: Set<TypeName>] = [:]
+    var optional: Set<String> = []
+}
+
 extension Summarizer {
     func reference(_ type: TypeSyntax, scope: Scope) -> TypeName? {
         TypeReference.path(of: type).flatMap { scoped($0, scope: scope) }
@@ -11,7 +16,8 @@ extension Summarizer {
     }
 
     func declaredValue(_ type: TypeSyntax?, scope: Scope) -> ValueReference? {
-        type.flatMap { reference($0, scope: scope) }.map(ValueReference.type)
+        guard let type, let name = reference(type, scope: scope) else { return nil }
+        return TypeReference.mayBeNil(type) ? .optional(.type(name)) : .type(name)
     }
 
     func declaredOrInitialValue(_ type: TypeSyntax?, initializer: ExprSyntax?, scope: Scope) -> ValueReference? {
@@ -40,7 +46,11 @@ extension Summarizer {
     }
 
     func valueReference(_ expression: ExprSyntax, scope: Scope) -> ValueReference? {
-        let expression = expression.unwrapped
+        let reference = possiblyOptionalReference(expression.unwrapped, scope: scope)
+        return expression.isForceUnwrapped ? reference?.asUnwrapped : reference
+    }
+
+    private func possiblyOptionalReference(_ expression: ExprSyntax, scope: Scope) -> ValueReference? {
         if let call = expression.as(FunctionCallExprSyntax.self) {
             if let constructed = staticType(call.calledExpression, scope: scope) {
                 return .type(constructed)
@@ -109,8 +119,12 @@ extension Summarizer {
         guard let access, let base = access.base else { return nil }
         let baseReference =
             base.isSelf ? enclosingType(scope).map(ValueReference.type) : valueReference(base, scope: scope)
-        let member = access.declName.baseName.text
-        switch baseReference {
+        let extended = baseReference.map { Self.extending($0, with: access.declName.baseName.text) }
+        return base.is(OptionalChainingExprSyntax.self) ? extended?.asOptional : extended
+    }
+
+    private static func extending(_ reference: ValueReference, with member: String) -> ValueReference {
+        switch reference {
         case .type(let type):
             return .memberChain(MemberChain(base: type, members: [member]))
         case .memberChain(let chain):
@@ -124,8 +138,10 @@ extension Summarizer {
                     topLevelReturnType: call.topLevelReturnType,
                 )
             )
-        case nil:
-            return nil
+        case .optional(let wrapped):
+            return extending(wrapped, with: member).asOptional
+        case .unwrapped(let wrapped):
+            return extending(wrapped, with: member)
         }
     }
 
@@ -146,6 +162,10 @@ extension Summarizer {
         return reference(returnType, scope: functionScope)
     }
 
+    func returnsOptional(_ function: FunctionDeclSyntax) -> Bool {
+        function.signature.returnClause.map { TypeReference.mayBeNil($0.type) } ?? false
+    }
+
     func propertyTable(_ members: MemberBlockSyntax, scope: Scope) -> [String: ValueReference] {
         var table: [String: ValueReference] = [:]
         var lookupScope = scope
@@ -156,13 +176,38 @@ extension Summarizer {
                 .flatMap { environmentAttributeType($0, scope: scope) }
             for binding in variable.bindings {
                 guard let identifier = binding.pattern.as(IdentifierPatternSyntax.self) else { continue }
-                let declared = binding.typeAnnotation.flatMap { reference($0.type, scope: scope) } ?? environmentType
                 let value =
-                    declared.map(ValueReference.type)
+                    declaredValue(binding.typeAnnotation?.type, scope: scope)
+                    ?? environmentType.map(ValueReference.type)
                     ?? binding.initializer.flatMap { valueReference($0.value, scope: lookupScope) }
                 if let value {
                     table[identifier.identifier.text] = value
                 }
+            }
+        }
+        return table
+    }
+
+    func memberTypes(_ members: MemberBlockSyntax, scope: Scope) -> MemberTable {
+        var table = MemberTable()
+        for (name, reference) in scope.properties {
+            switch reference {
+            case .type(let type):
+                table.types[name, default: []].insert(type)
+            case .optional(.type(let type)):
+                table.types[name, default: []].insert(type)
+                table.optional.insert(name)
+            case .memberChain, .call, .optional, .unwrapped:
+                continue
+            }
+        }
+        for member in members.membersInEveryBranch {
+            guard let function = member.decl.as(FunctionDeclSyntax.self),
+                let type = concreteReturnType(of: function, scope: scope)
+            else { continue }
+            table.types[function.name.text, default: []].insert(type)
+            if returnsOptional(function) {
+                table.optional.insert(function.name.text)
             }
         }
         return table

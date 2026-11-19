@@ -222,7 +222,7 @@ extension Summarizer {
         switch reference {
         case .type:
             break
-        case .memberChain, .call, nil:
+        case .memberChain, .call, .optional, .unwrapped, nil:
             let location = location(of: argument.expression)
             if declared.isEmpty && unresolvedLocations.insert(location).inserted {
                 summary.unresolved.append(

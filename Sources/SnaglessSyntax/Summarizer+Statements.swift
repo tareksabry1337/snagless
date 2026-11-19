@@ -144,7 +144,7 @@ extension Summarizer {
                         binding.initializer?.value
                         ?? ExprSyntax(DeclReferenceExprSyntax(baseName: .identifier(name)))
                     let type = declaredOrInitialValue(binding.typeAnnotation?.type, initializer: value, scope: current)
-                    current.locals[name] = LocalBinding(type)
+                    current.locals[name] = LocalBinding(type?.asUnwrapped)
                 }
             case .matchingPattern(let pattern):
                 summarize(Syntax(pattern.initializer.value), provided: provided, scope: current)

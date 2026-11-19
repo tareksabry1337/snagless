@@ -53,6 +53,10 @@ struct RuntimeCaseView: View {
         case .closureHelper: ClosureHelper.Root()
         case .readOnlyInAction: ReadOnlyInAction.Root()
         case .readOnlyInContextMenu: ReadOnlyInContextMenu.Root()
+        case .optionalValue: OptionalValue.Root()
+        case .optionalValueUnwrapped: OptionalValueUnwrapped.Root()
+        case .splitViewDestinationInjectedBetween: SplitViewDestinationInjectedBetween.Root()
+        case .splitViewDestinationInjectedOnSplitView: SplitViewDestinationInjectedOnSplitView.Root()
         }
     }
 }

@@ -47,4 +47,8 @@ enum RuntimeCase: String, CaseIterable {
     case closureHelper
     case readOnlyInAction
     case readOnlyInContextMenu
+    case optionalValue
+    case optionalValueUnwrapped
+    case splitViewDestinationInjectedBetween
+    case splitViewDestinationInjectedOnSplitView
 }

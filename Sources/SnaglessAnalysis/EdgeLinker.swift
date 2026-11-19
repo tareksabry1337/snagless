@@ -136,7 +136,7 @@ struct EdgeLinker {
         if let hosting = edge.unlessHosting, types.isHosting(hosting) {
             return []
         }
-        let receiver = edge.receiver.flatMap(memberTypes.type(of:))
+        let receiver = edge.receiver.flatMap(memberTypes.typeIgnoringNil(of:))
         switch edge.target {
         case .type(let type):
             return lookup(.type(type), file: file)
@@ -156,7 +156,9 @@ struct EdgeLinker {
             }
             let members = isNode ? lookupMember(member, of: receiver, file: file) : []
             guard members.isEmpty, case .called = member.labels,
-                let returned = memberTypes.type(of: .memberChain(MemberChain(base: receiver, members: [member.base])))
+                let returned = memberTypes.typeIgnoringNil(
+                    of: .memberChain(MemberChain(base: receiver, members: [member.base]))
+                )
             else { return members }
             return lookup(.type(returned), file: file)
         }

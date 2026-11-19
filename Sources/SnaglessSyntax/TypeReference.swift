@@ -59,6 +59,10 @@ enum TypeReference {
         return type.hasError ? nil : path(of: type)
     }
 
+    static func mayBeNil(_ type: TypeSyntax) -> Bool {
+        type.is(ImplicitlyUnwrappedOptionalTypeSyntax.self) || isOptional(type)
+    }
+
     static func isOptional(_ type: TypeSyntax) -> Bool {
         switch type.as(TypeSyntaxEnum.self) {
         case .optionalType:

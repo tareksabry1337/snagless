@@ -12,6 +12,7 @@ package struct TypeSummary {
     package let isView: Bool
     package let inherited: [TypeName]
     package let memberTypes: [String: Set<TypeName>]
+    package let optionalMembers: Set<String>
     package let protocolRequirements: [String]
     package let crashingDefault: SourceLocation?
 
@@ -22,6 +23,7 @@ package struct TypeSummary {
         isView: Bool = false,
         inherited: [TypeName] = [],
         memberTypes: [String: Set<TypeName>] = [:],
+        optionalMembers: Set<String> = [],
         protocolRequirements: [String] = [],
         crashingDefault: SourceLocation? = nil,
     ) {
@@ -31,6 +33,7 @@ package struct TypeSummary {
         self.isView = isView
         self.inherited = inherited
         self.memberTypes = memberTypes
+        self.optionalMembers = optionalMembers
         self.protocolRequirements = protocolRequirements
         self.crashingDefault = crashingDefault
     }

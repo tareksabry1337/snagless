@@ -66,6 +66,7 @@ package final class Summarizer {
     private func topLevelFunctions(_ items: CodeBlockItemListSyntax, scope: Scope) -> [TopLevelFunction] {
         items.flatMap { item -> [TopLevelFunction] in
             if let function = item.item.as(FunctionDeclSyntax.self) {
+                guard !returnsOptional(function) else { return [] }
                 return concreteReturnType(of: function, scope: scope)
                     .map {
                         [TopLevelFunction(name: function.name.text, returnType: $0)]
