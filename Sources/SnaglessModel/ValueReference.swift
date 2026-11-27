@@ -28,6 +28,7 @@ package indirect enum ValueReference: Hashable, Sendable {
     case call(FunctionCall)
     case optional(Self)
     case unwrapped(Self)
+    case ternary(Self, Self)
 
     package var asOptional: Self {
         switch self {
@@ -35,7 +36,7 @@ package indirect enum ValueReference: Hashable, Sendable {
             return self
         case .unwrapped(let wrapped):
             return .optional(wrapped)
-        case .type, .memberChain, .call:
+        case .type, .memberChain, .call, .ternary:
             return .optional(self)
         }
     }
@@ -46,7 +47,7 @@ package indirect enum ValueReference: Hashable, Sendable {
             return self
         case .optional(let wrapped):
             return wrapped.asUnwrapped
-        case .memberChain, .call:
+        case .memberChain, .call, .ternary:
             return .unwrapped(self)
         }
     }
