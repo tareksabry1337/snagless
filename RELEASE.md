@@ -7,24 +7,38 @@ compiles swift-syntax. Once it holds the released bundle, the plugin uses the pr
 compile, which takes roughly 10 seconds off a clean build of each example project. Contributors who want the
 source build anyway set `SNAGLESS_FROM_SOURCE=1`.
 
-The bundle is macOS only: one universal binary for arm64 and x86_64. Linux binaries come with 1.0.
+The bundle is macOS only: one universal binary for arm64 and x86_64. SwiftUI apps don't build on Linux, so the
+plugin never runs there, and every plugin user downloads the whole bundle, so Linux binaries stay out of it. A
+static Linux binary links in Foundation's ICU data and is about 60 MB; the bundle would grow from 8 MB to 55 MB.
+
+## Linux binaries
+
+Each release also has `snagless-linux-x86_64.tar.gz` and `snagless-linux-aarch64.tar.gz`, each holding the
+`snagless` binary with the LICENSE and NOTICE. They are built with Swift's static Linux SDK, so they need no Swift
+runtime or particular C library on the machine. The README's command line and GitHub Actions snippets download
+them.
 
 ## Checklist
 
-1. Set the version in `Snagless.version` (`Sources/SnaglessDriver/Snagless.swift`) and in the README's install
-   snippet.
+1. Set the version in `Snagless.version` (`Sources/SnaglessDriver/Snagless.swift`) and in the README's three
+   snippets: Swift package, Command line and GitHub Actions.
 2. Run the checks in CONTRIBUTING.md, including the IceCubesApp comparison.
-3. Run `Scripts/release.sh VERSION`. It builds the universal binary in release, checks that `snagless --version`
-   prints `snagless VERSION`, writes `.build/release-bundle/snagless.artifactbundle.zip` with the LICENSE and
-   NOTICE inside, and prints the binary's architectures, its size and the archive's checksum. It takes a few
-   minutes.
+3. Start Docker and run `Scripts/release.sh VERSION`. It builds the universal macOS binary, then the two Linux
+   binaries in a `swift` container, and checks that each one prints `snagless VERSION` (the Linux ones in an
+   Ubuntu container of their own architecture). It writes `snagless.artifactbundle.zip` and the two Linux archives
+   to `.build/release-bundle`, and prints each binary's architecture, each archive's size and SHA-256, and the
+   checksum for `Package.swift`. The Linux builds compile swift-syntax twice, so it takes a while. The container's
+   Swift version and the static SDK at the top of the script have to match exactly; update all three lines
+   together.
 4. Point `releasedBinary` at the archive's release URL with the printed checksum:
    `.binaryTarget(name: "SnaglessBinary", url: "https://github.com/tareksabry1337/snagless/releases/download/VERSION/snagless.artifactbundle.zip", checksum: "CHECKSUM")`.
    The checksum covers only the archive, so it stays the same after this edit. Commit, and tag that commit with
    the version.
-5. Create the GitHub release for the tag and upload the archive, so the URL from step 4 works.
+5. Create the GitHub release for the tag and upload the three archives, so the URL from step 4 and the README's
+   snippets work.
 6. In a new folder, make a package that depends on the tag and uses the plugin, build it, and check that
-   the build uses the prebuilt binary.
+   the build uses the prebuilt binary. Then run the README's command line snippet in a fresh `ubuntu` container on
+   one of the example folders and check that it reports the missing `Cart`.
 
 ## Toolchain
 
@@ -33,12 +47,6 @@ a release, run the checks with every Xcode on hand and update the compatibility 
 README.
 
 ## Planned for 1.0
-
-### Linux
-
-The command line tool runs on Linux CI runners as well as on Macs. Plan: add Linux x86_64 and aarch64 binaries,
-with the Swift standard library linked in statically, to the artifact bundle, built on Linux runners by the
-release workflow. The plugin uses them too, so a package checked on Linux skips the swift-syntax compile.
 
 ### Homebrew
 

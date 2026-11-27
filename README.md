@@ -191,10 +191,16 @@ project uses, and the local packages those depend on.
 
 ### Command line
 
+Each release has prebuilt Linux binaries for x86_64 and arm64. They are static, so they run on any distribution
+with nothing else installed:
+
 ```
-swift build -c release
-.build/release/snagless path/to/MyApp
+curl -sL https://github.com/tareksabry1337/snagless/releases/download/0.9.2/snagless-linux-$(uname -m).tar.gz | tar xz
+./snagless path/to/MyApp
 ```
+
+On a Mac, the release's `snagless.artifactbundle.zip` has the binary in `snagless.artifactbundle/snagless-0.9.2-macos/bin`.
+To build it yourself instead, run `swift build -c release` and use `.build/release/snagless`.
 
 It exits with 0 when the run is clean or has only warnings, 1 when it finds an error, and 2 when the arguments are
 wrong, a path is missing, or a file can't be read as UTF-8 text.
@@ -211,6 +217,23 @@ wrong, a path is missing, or a file can't be read as UTF-8 text.
   GitHub Actions.
 - `--verbose` also lists unresolved values, unreachable views, and files it parsed only in part.
 - `--timing` prints how long each step took.
+
+### GitHub Actions
+
+If your CI already builds the app with the plugin, there is nothing to add: the build fails on a problem, and each
+one shows up on its line in the pull request. To check the code without building the app, run the binary on a Linux
+runner, which for private repositories costs a fraction of a macOS one:
+
+```yaml
+jobs:
+  snagless:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: |
+          curl -sL https://github.com/tareksabry1337/snagless/releases/download/0.9.2/snagless-linux-x86_64.tar.gz | tar xz -C "$RUNNER_TEMP"
+          "$RUNNER_TEMP/snagless" --format github .
+```
 
 ## When it's wrong
 
@@ -278,7 +301,8 @@ ROADMAP.md lists the fixes planned for 1.0.
 
 ## Requirements
 
-macOS 13 or later and Xcode 16 or later (Swift 6.0). Snagless builds against swift-syntax 604.0.0.
+macOS 13 or later and Xcode 16 or later (Swift 6.0). Snagless builds against swift-syntax 604.0.0. The command line
+tool also runs on Linux, x86_64 or arm64.
 
 | Xcode | Swift | Prebuilt binary | From source |
 | ----- | ----- | --------------- | ----------- |
