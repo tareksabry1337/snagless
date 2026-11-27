@@ -49,7 +49,6 @@ extension SourceFile {
             let enumerator = FileManager.default.enumerator(
                 at: URL(fileURLWithPath: path).standardized,
                 includingPropertiesForKeys: [],
-                options: [.producesRelativePathURLs],
             )
         else { return [] }
         var paths: [String] = []
@@ -58,7 +57,7 @@ extension SourceFile {
             if skippedDirectories.contains(name) {
                 enumerator.skipDescendants()
             } else if name.hasSuffix(".swift") {
-                paths.append(url.relativePath)
+                paths.append(url.pathComponents.suffix(enumerator.level).joined(separator: "/"))
             }
         }
         return paths

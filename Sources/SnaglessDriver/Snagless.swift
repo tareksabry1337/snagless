@@ -82,7 +82,7 @@ public enum Snagless {
             if errors > 0 {
                 try? FileManager.default.removeItem(atPath: stamp)
             } else {
-                FileManager.default.createFile(atPath: stamp, contents: Data())
+                _ = FileManager.default.createFile(atPath: stamp, contents: Data())
             }
         }
         return errors > 0 ? 1 : 0
