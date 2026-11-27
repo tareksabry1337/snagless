@@ -71,9 +71,18 @@ docker run --rm \
 
 for arch in "${linux_arches[@]}"; do
     platform=linux/$([ "$arch" = x86_64 ] && echo amd64 || echo arm64)
-    reported=$(docker run --rm --platform "$platform" -v "$linux_work/$arch":/out:ro ubuntu:24.04 /out/snagless --version)
+    linux_run=(docker run --rm --platform "$platform" -v "$linux_work/$arch":/out:ro -v "$repo/Examples":/examples:ro
+        ubuntu:24.04 /out/snagless)
+    reported=$("${linux_run[@]}" --version)
     if [ "$reported" != "snagless $version" ]; then
         echo "The $arch Linux binary reports \"$reported\"; expected \"snagless $version\"."
+        exit 1
+    fi
+    status=0
+    found=$("${linux_run[@]}" /examples 2>/dev/null) || status=$?
+    if [ "$status" != 1 ] || ! grep -q 'needs `Cart`' <<<"$found"; then
+        echo "The $arch Linux binary exited with $status on Examples; expected 1 and the missing \`Cart\`:"
+        echo "$found"
         exit 1
     fi
     cp LICENSE NOTICE "$linux_work/$arch/"

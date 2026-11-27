@@ -24,19 +24,23 @@ them.
    snippets: Swift package, Command line and GitHub Actions.
 2. Run the checks in CONTRIBUTING.md, including the IceCubesApp comparison.
 3. Start Docker and run `Scripts/release.sh VERSION`. It builds the universal macOS binary, then the two Linux
-   binaries in a `swift` container, and checks that each one prints `snagless VERSION` (the Linux ones in an
-   Ubuntu container of their own architecture). It writes `snagless.artifactbundle.zip` and the two Linux archives
+   binaries in a `swift` container, and checks that each one prints `snagless VERSION`. It runs each Linux binary
+   in an Ubuntu container of its own architecture, and checks that it also finds the missing `Cart` in `Examples`.
+   It writes `snagless.artifactbundle.zip` and the two Linux archives
    to `.build/release-bundle`, and prints each binary's architecture, each archive's size and SHA-256, and the
    checksum for `Package.swift`. The Linux builds compile swift-syntax twice, so it takes a while. The container's
    Swift version and the static SDK at the top of the script have to match exactly; update all three lines
    together.
 4. Point `releasedBinary` at the archive's release URL with the printed checksum:
    `.binaryTarget(name: "SnaglessBinary", url: "https://github.com/tareksabry1337/snagless/releases/download/VERSION/snagless.artifactbundle.zip", checksum: "CHECKSUM")`.
-   The checksum covers only the archive, so it stays the same after this edit. Commit, and tag that commit with
-   the version.
-5. Create the GitHub release for the tag and upload the three archives, so the URL from step 4 and the README's
+   The checksum covers only the archive, so it stays the same after this edit.
+5. `main` only takes pull requests that pass CI, so commit steps 1 and 4 on a branch and open a pull request. CI
+   builds Snagless from source, so it passes before the archive is published. Merge it, then tag the merged
+   commit on `main` with the version and push the tag. Tags can't be moved or deleted once pushed, so check the
+   commit first.
+6. Create the GitHub release for the tag and upload the three archives, so the URL from step 4 and the README's
    snippets work.
-6. In a new folder, make a package that depends on the tag and uses the plugin, build it, and check that
+7. In a new folder, make a package that depends on the tag and uses the plugin, build it, and check that
    the build uses the prebuilt binary. Then run the README's command line snippet in a fresh `ubuntu` container on
    one of the example folders and check that it reports the missing `Cart`.
 
