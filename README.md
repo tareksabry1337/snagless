@@ -206,6 +206,9 @@ wrong, a path is missing, or a file can't be read as UTF-8 text.
 - `--legacy-sheets` checks sheets, popovers and full-screen covers as if they start with an empty environment.
   Use it if your app supports iOS 13 or 14, where developers report that sheets start with an
   empty environment.
+- `--format text|github` sets how problems are printed. With `github`, each one is also printed as a GitHub Actions
+  annotation, so it shows up on the line in the pull request. The plugin turns this on by itself when it runs on
+  GitHub Actions.
 - `--verbose` also lists unresolved values, unreachable views, and files it parsed only in part.
 - `--timing` prints how long each step took.
 

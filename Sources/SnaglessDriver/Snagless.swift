@@ -61,7 +61,8 @@ public enum Snagless {
         let analyzed = clock.now
 
         let report = Report(analysis, verbose: options.verbose)
-        FileHandle.standardOutput.write(Data(report.output.utf8))
+        let output = options.format == .github ? GitHubAnnotations.render(report.diagnostics) : report.output
+        FileHandle.standardOutput.write(Data(output.utf8))
         FileHandle.standardError.write(Data(report.notes.utf8))
         let errors = report.diagnostics.filter { $0.severity == .error }.count
         var summary = summaryLine(

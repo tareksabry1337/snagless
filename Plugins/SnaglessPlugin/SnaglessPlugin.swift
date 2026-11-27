@@ -40,6 +40,9 @@ private struct CheckCommand {
             try encoded.write(to: graphFile, options: .atomic)
         }
         var arguments = ["--targets", graphFile.path(percentEncoded: false)]
+        if ProcessInfo.processInfo.environment["GITHUB_ACTIONS"] == "true" {
+            arguments += ["--format", "github"]
+        }
         if let stamp {
             arguments += ["--stamp", stamp.path(percentEncoded: false)]
         }
