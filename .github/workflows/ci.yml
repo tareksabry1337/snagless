@@ -30,6 +30,8 @@ jobs:
   test-macos:
     needs: lint
     runs-on: xcode-27
+    env:
+      SNAGLESS_FROM_SOURCE: "1"
     defaults:
       run:
         working-directory: snagless

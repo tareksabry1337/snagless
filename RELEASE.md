@@ -33,11 +33,14 @@ them.
    together.
 4. Point `releasedBinary` at the archive's release URL with the printed checksum:
    `.binaryTarget(name: "SnaglessBinary", url: "https://github.com/tareksabry1337/snagless/releases/download/VERSION/snagless.artifactbundle.zip", checksum: "CHECKSUM")`.
-   The checksum covers only the archive, so it stays the same after this edit. Commit, and tag that commit with
-   the version.
-5. Create the GitHub release for the tag and upload the three archives, so the URL from step 4 and the README's
+   The checksum covers only the archive, so it stays the same after this edit.
+5. `main` only takes pull requests that pass CI, so commit steps 1 and 4 on a branch and open a pull request. CI
+   builds Snagless from source, so it passes before the archive is published. Merge it, then tag the merged
+   commit on `main` with the version and push the tag. Tags can't be moved or deleted once pushed, so check the
+   commit first.
+6. Create the GitHub release for the tag and upload the three archives, so the URL from step 4 and the README's
    snippets work.
-6. In a new folder, make a package that depends on the tag and uses the plugin, build it, and check that
+7. In a new folder, make a package that depends on the tag and uses the plugin, build it, and check that
    the build uses the prebuilt binary. Then run the README's command line snippet in a fresh `ubuntu` container on
    one of the example folders and check that it reports the missing `Cart`.
 
