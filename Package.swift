@@ -3,8 +3,8 @@ import PackageDescription
 
 let releasedBinary: Target? = .binaryTarget(
     name: "SnaglessBinary",
-    url: "https://github.com/tareksabry1337/snagless/releases/download/0.9.2/snagless.artifactbundle.zip",
-    checksum: "84ab6c5949bd8a67a60b31afb8dbb23deb34562252e4bda99395e2a58ba79c2e"
+    url: "https://github.com/tareksabry1337/snagless/releases/download/0.10.0/snagless.artifactbundle.zip",
+    checksum: "97961585573795c09c126017d44fa17b2ce85f5e5efa71cac117aacffb5c092e"
 )
 let buildsToolFromSource = releasedBinary == nil || Context.environment["SNAGLESS_FROM_SOURCE"] != nil
 let binaryTargets = buildsToolFromSource ? [] : [releasedBinary].compactMap { $0 }
