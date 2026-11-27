@@ -168,7 +168,7 @@ CONTRIBUTING.md has the modules behind each step.
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/tareksabry1337/snagless", from: "0.9.2"),
+    .package(url: "https://github.com/tareksabry1337/snagless", from: "0.10.0"),
 ],
 targets: [
     .target(
@@ -195,11 +195,11 @@ Each release has prebuilt Linux binaries for x86_64 and arm64. They are static, 
 with nothing else installed:
 
 ```
-curl -sL https://github.com/tareksabry1337/snagless/releases/download/0.9.2/snagless-linux-$(uname -m).tar.gz | tar xz
+curl -sL https://github.com/tareksabry1337/snagless/releases/download/0.10.0/snagless-linux-$(uname -m).tar.gz | tar xz
 ./snagless path/to/MyApp
 ```
 
-On a Mac, the release's `snagless.artifactbundle.zip` has the binary in `snagless.artifactbundle/snagless-0.9.2-macos/bin`.
+On a Mac, the release's `snagless.artifactbundle.zip` has the binary in `snagless.artifactbundle/snagless-0.10.0-macos/bin`.
 To build it yourself instead, run `swift build -c release` and use `.build/release/snagless`.
 
 It exits with 0 when the run is clean or has only warnings, 1 when it finds an error, and 2 when the arguments are
@@ -231,7 +231,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - run: |
-          curl -sL https://github.com/tareksabry1337/snagless/releases/download/0.9.2/snagless-linux-x86_64.tar.gz | tar xz -C "$RUNNER_TEMP"
+          curl -sL https://github.com/tareksabry1337/snagless/releases/download/0.10.0/snagless-linux-x86_64.tar.gz | tar xz -C "$RUNNER_TEMP"
           "$RUNNER_TEMP/snagless" --format github .
 ```
 
