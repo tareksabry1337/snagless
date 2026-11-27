@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
+  lint:
     runs-on: xcode-27
     defaults:
       run:
@@ -23,10 +23,47 @@ jobs:
       - name: Xcode
         run: sudo xcode-select --switch /Applications/Xcode_27.0.app/Contents/Developer
       - name: Tools
-        run: brew install swiftlint xcodegen
+        run: brew install swiftlint
       - name: Lint
         run: Scripts/lint.sh
+
+  test-macos:
+    needs: lint
+    runs-on: xcode-27
+    defaults:
+      run:
+        working-directory: snagless
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: snagless
+      - name: Xcode
+        run: sudo xcode-select --switch /Applications/Xcode_27.0.app/Contents/Developer
+      - name: Tools
+        run: brew install xcodegen
       - name: Tests
         run: swift test -Xswiftc -warnings-as-errors
       - name: Examples
         run: Scripts/check-examples.sh
+
+  test-linux:
+    needs: lint
+    runs-on: ubuntu-latest
+    container: swift:6.4.3
+    env:
+      SNAGLESS_FROM_SOURCE: "1"
+    defaults:
+      run:
+        working-directory: snagless
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: snagless
+      - name: Tools
+        run: apt-get update -qq && apt-get install -y -qq python3
+      - uses: actions/cache@v6
+        with:
+          path: snagless/.build
+          key: linux-swift-6.4.3-${{ hashFiles('snagless/Package.resolved') }}
+      - name: Tests
+        run: swift test -Xswiftc -warnings-as-errors

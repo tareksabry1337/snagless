@@ -63,7 +63,11 @@ target's own files.
   `Scripts/bench.py --binary .build/release/snagless FOLDER...`. It prints the median of seven runs of each step for
   every folder; the speed numbers in the README come from it.
 
-CI runs the lint, the tests and `Scripts/check-examples.sh`. The script builds both example projects, which leave
+CI runs the lint first, then the tests on macOS and on Linux side by side, and `Scripts/check-examples.sh` on macOS.
+The Linux tests run in the same `swift` image the release builds with, so a change that only breaks on Linux fails
+there. To run them the same way on a Mac, start Docker and run `docker run --rm -v "$PWD":/src:ro -w /src -e
+SNAGLESS_FROM_SOURCE=1 swift:6.4.3 bash -c 'apt-get update -qq && apt-get install -y -qq python3 && swift test
+--scratch-path /tmp/build'`. The script builds both example projects, which leave
 out `Cart` on purpose and must fail on it, then adds a missing value in another target and in a local package, and
 checks that Snagless runs again and fails each time, then passes once it is fixed. It needs xcodegen.
 

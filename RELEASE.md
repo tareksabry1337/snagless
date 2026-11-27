@@ -24,8 +24,9 @@ them.
    snippets: Swift package, Command line and GitHub Actions.
 2. Run the checks in CONTRIBUTING.md, including the IceCubesApp comparison.
 3. Start Docker and run `Scripts/release.sh VERSION`. It builds the universal macOS binary, then the two Linux
-   binaries in a `swift` container, and checks that each one prints `snagless VERSION` (the Linux ones in an
-   Ubuntu container of their own architecture). It writes `snagless.artifactbundle.zip` and the two Linux archives
+   binaries in a `swift` container, and checks that each one prints `snagless VERSION`. It runs each Linux binary
+   in an Ubuntu container of its own architecture, and checks that it also finds the missing `Cart` in `Examples`.
+   It writes `snagless.artifactbundle.zip` and the two Linux archives
    to `.build/release-bundle`, and prints each binary's architecture, each archive's size and SHA-256, and the
    checksum for `Package.swift`. The Linux builds compile swift-syntax twice, so it takes a while. The container's
    Swift version and the static SDK at the top of the script have to match exactly; update all three lines
