@@ -2,6 +2,7 @@
 set -euo pipefail
 
 repo=$(cd "$(dirname "$0")/.." && pwd)
+export SNAGLESS_FROM_SOURCE=1
 work=$(mktemp -d)
 derived_data=$HOME/Library/Developer/Xcode/DerivedData
 
