@@ -3,12 +3,7 @@ import SwiftSyntax
 
 extension Summarizer {
     func visitStruct(_ decl: StructDeclSyntax, outer: Scope) {
-        var scope = typeScope(
-            name: decl.name.text,
-            members: decl.memberBlock,
-            generics: decl.genericParameterNames,
-            outer: outer,
-        )
+        var scope = typeScope(name: decl.name.text, generics: decl.genericParameterNames, outer: outer)
         let type = TypeName(path: scope.chain[0])
         let inherited = inheritedTypes(decl.inheritanceClause, scope: scope)
         let isView = Self.conforms(inherited, to: SwiftUIAPI.viewConformances)
@@ -95,12 +90,7 @@ extension Summarizer {
         kind: TypeKind,
         outer: Scope,
     ) {
-        var scope = typeScope(
-            name: decl.name.text,
-            members: decl.memberBlock,
-            generics: decl.genericParameterNames,
-            outer: outer,
-        )
+        var scope = typeScope(name: decl.name.text, generics: decl.genericParameterNames, outer: outer)
         let type = TypeName(path: scope.chain[0])
         let inherited = inheritedTypes(decl.inheritanceClause, scope: scope)
         declareType(type, kind: kind, inherited: inherited, members: decl.memberBlock, scope: scope)
@@ -113,7 +103,7 @@ extension Summarizer {
     }
 
     func visitProtocol(_ decl: ProtocolDeclSyntax, outer: Scope) {
-        let scope = typeScope(name: decl.name.text, members: decl.memberBlock, generics: [], outer: outer)
+        let scope = typeScope(name: decl.name.text, generics: [], outer: outer)
         var requirements: [String] = []
         for member in decl.memberBlock.membersInEveryBranch {
             if let function = member.decl.as(FunctionDeclSyntax.self) {
@@ -151,7 +141,6 @@ extension Summarizer {
             visitModifierExtension(decl, scope: scope)
             return
         }
-        scope.properties = propertyTable(decl.memberBlock, scope: scope)
         let isView = Self.conforms(inherited, to: SwiftUIAPI.viewConformances)
         declareType(
             type,
@@ -175,17 +164,11 @@ extension Summarizer {
         summarizeMembers(decl.memberBlock, scope: scope)
     }
 
-    private func typeScope(
-        name: String,
-        members: MemberBlockSyntax,
-        generics: [String],
-        outer: Scope,
-    ) -> Scope {
+    private func typeScope(name: String, generics: [String], outer: Scope) -> Scope {
         var scope = Scope(ownerName: name)
         scope.chain = [outer.chain.first.map { $0 + "." + name } ?? name] + outer.chain
         scope.lexical = register(scope.chain)
         scope.generics = outer.generics.union(generics)
-        scope.properties = propertyTable(members, scope: scope)
         return scope
     }
 
@@ -211,7 +194,6 @@ extension Summarizer {
         scope: Scope,
         isView: Bool = false,
     ) {
-        let table = members.map { memberTypes($0, scope: scope) } ?? MemberTable()
         summary.types.append(
             TypeSummary(
                 name: name,
@@ -219,8 +201,7 @@ extension Summarizer {
                 scope: scope.lexical,
                 isView: isView,
                 inherited: inherited,
-                memberTypes: table.types,
-                optionalMembers: table.optional,
+                memberValues: members.map { memberValues($0, scope: scope) } ?? [:],
                 crashingDefault: members.flatMap { crashingDefault(inherited, members: $0) },
             )
         )

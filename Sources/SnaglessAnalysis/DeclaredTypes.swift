@@ -118,63 +118,76 @@ struct MemberTypes {
         let mayBeNil: Bool
     }
 
-    private let table: [TypeName: [String: Set<TypeName>]]
-    private let optionalMembers: [TypeName: Set<String>]
+    private struct Member: Equatable {
+        let owner: TypeName
+        let name: String
+    }
+
+    private let table: [TypeName: [String: [ValueReference]]]
 
     init(_ files: [SummarizedFile]) {
-        var table: [TypeName: [String: Set<TypeName>]] = [:]
-        var optionalMembers: [TypeName: Set<String>] = [:]
-        for type in files.flatMap(\.summary.types) where !type.memberTypes.isEmpty {
-            table[type.name, default: [:]].merge(type.memberTypes) { $0.union($1) }
-            optionalMembers[type.name, default: []].formUnion(type.optionalMembers)
+        var table: [TypeName: [String: [ValueReference]]] = [:]
+        for type in files.flatMap(\.summary.types) where !type.memberValues.isEmpty {
+            table[type.name, default: [:]].merge(type.memberValues) { $0 + $1 }
         }
         self.table = table
-        self.optionalMembers = optionalMembers
     }
 
     func type(of reference: ValueReference) -> TypeName? {
-        value(of: reference).flatMap { $0.mayBeNil ? nil : $0.type }
+        value(of: reference, visiting: []).flatMap { $0.mayBeNil ? nil : $0.type }
     }
 
     func typeIgnoringNil(of reference: ValueReference) -> TypeName? {
-        value(of: reference)?.type
+        value(of: reference, visiting: [])?.type
     }
 
-    private func value(of reference: ValueReference) -> Value? {
+    private func value(of reference: ValueReference, visiting: [Member]) -> Value? {
         switch reference {
         case .type(let type):
             return Value(type: type, mayBeNil: false)
         case .memberChain(let chain):
-            return follow(chain.members[...], from: chain.base)
+            return follow(chain.members[...], from: Value(type: chain.base, mayBeNil: false), visiting: visiting)
         case .call(let call):
-            if let owner = call.owner, let start = table[owner]?[call.name] {
-                return start.onlyElement.flatMap {
-                    follow(call.members[...], from: Value(type: $0, mayBeNil: isOptional(call.name, of: owner)))
-                }
+            if let owner = call.owner,
+                let start = value(of: Member(owner: owner, name: call.name), visiting: visiting)
+            {
+                return follow(call.members[...], from: start, visiting: visiting)
             }
-            return call.topLevelReturnType.flatMap { follow(call.members[...], from: $0) }
+            return call.topLevelReturnType.flatMap {
+                follow(call.members[...], from: Value(type: $0, mayBeNil: false), visiting: visiting)
+            }
         case .optional(let wrapped):
-            return value(of: wrapped).map { Value(type: $0.type, mayBeNil: true) }
+            return value(of: wrapped, visiting: visiting).map { Value(type: $0.type, mayBeNil: true) }
         case .unwrapped(let wrapped):
-            return value(of: wrapped).map { Value(type: $0.type, mayBeNil: false) }
+            return value(of: wrapped, visiting: visiting).map { Value(type: $0.type, mayBeNil: false) }
+        case .ternary(let first, let second):
+            guard let first = value(of: first, visiting: visiting), let second = value(of: second, visiting: visiting)
+            else { return nil }
+            return Self.combinedIfSameType(first, second)
         }
     }
 
-    private func follow(_ members: ArraySlice<String>, from start: TypeName) -> Value? {
-        follow(members, from: Value(type: start, mayBeNil: false))
+    private func value(of member: Member, visiting: [Member]) -> Value? {
+        guard let references = table[member.owner]?[member.name], !visiting.contains(member) else { return nil }
+        let values = references.compactMap { value(of: $0, visiting: visiting + [member]) }
+        return values.dropFirst()
+            .reduce(values.first) { combined, next in
+                combined.flatMap { Self.combinedIfSameType($0, next) }
+            }
     }
 
-    private func follow(_ members: ArraySlice<String>, from start: Value) -> Value? {
+    private func follow(_ members: ArraySlice<String>, from start: Value, visiting: [Member]) -> Value? {
         var current = start
-        for member in members {
-            guard let next = table[current.type]?[member]?.onlyElement else { return nil }
-            current = Value(type: next, mayBeNil: isOptional(member, of: current.type))
+        for name in members {
+            guard let next = value(of: Member(owner: current.type, name: name), visiting: visiting) else { return nil }
+            current = next
         }
         return current
     }
 
-    private func isOptional(_ member: String, of owner: TypeName) -> Bool {
-        optionalMembers[owner, default: []].contains(member)
+    private static func combinedIfSameType(_ first: Value, _ second: Value) -> Value? {
+        guard first.type == second.type else { return nil }
+        return Value(type: first.type, mayBeNil: first.mayBeNil || second.mayBeNil)
     }
 
     func type(providedBy provision: Provision) -> TypeName? {

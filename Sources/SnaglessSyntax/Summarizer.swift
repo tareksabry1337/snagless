@@ -25,7 +25,6 @@ package final class Summarizer {
 
     struct Scope {
         var sink: Sink = .none
-        var properties: [String: ValueReference] = [:]
         var locals: [String: LocalBinding] = [:]
         var ownerName: String
         var memberOwner: TypeName?

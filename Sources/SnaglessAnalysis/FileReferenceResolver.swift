@@ -53,8 +53,7 @@ final class FileReferenceResolver {
             scope: declaration.scope,
             isView: declaration.isView,
             inherited: declaration.inherited.map { type($0, in: declaration.scope) },
-            memberTypes: declaration.memberTypes.mapValues { Set($0.map { type($0, in: declaration.scope) }) },
-            optionalMembers: declaration.optionalMembers,
+            memberValues: declaration.memberValues.mapValues { $0.map { resolve($0, in: declaration.scope) } },
             protocolRequirements: declaration.protocolRequirements,
             crashingDefault: declaration.crashingDefault,
         )
@@ -187,6 +186,8 @@ final class FileReferenceResolver {
             return .optional(resolve(wrapped, in: scope))
         case .unwrapped(let wrapped):
             return .unwrapped(resolve(wrapped, in: scope))
+        case .ternary(let first, let second):
+            return .ternary(resolve(first, in: scope), resolve(second, in: scope))
         }
     }
 }
