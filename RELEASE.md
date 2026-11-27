@@ -20,8 +20,8 @@ them.
 
 ## Checklist
 
-1. Set the version in `Snagless.version` (`Sources/SnaglessDriver/Snagless.swift`) and in the README's three
-   snippets: Swift package, Command line and GitHub Actions.
+1. Set the version in `Snagless.version` (`Sources/SnaglessDriver/Snagless.swift`) and everywhere the README
+   names it: the Swift package, Command line and GitHub Actions snippets, and the Mac binary's path in the bundle.
 2. Run the checks in CONTRIBUTING.md, including the IceCubesApp comparison.
 3. Start Docker and run `Scripts/release.sh VERSION`. It builds the universal macOS binary, then the two Linux
    binaries in a `swift` container, and checks that each one prints `snagless VERSION`. It runs each Linux binary
