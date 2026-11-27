@@ -35,10 +35,9 @@ private struct CheckCommand {
         let graphFile = workDirectory.appending(path: "targets.json")
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys, .prettyPrinted, .withoutEscapingSlashes]
-        let encoded = try encoder.encode(graph)
-        if (try? Data(contentsOf: graphFile)) != encoded {
-            try encoded.write(to: graphFile, options: .atomic)
-        }
+        try Self.write(encoder.encode(graph), to: graphFile)
+        let fingerprintFile = workDirectory.appending(path: "inputs.fingerprint")
+        try Self.write(fingerprint(of: inputFiles), to: fingerprintFile)
         var arguments = ["--targets", graphFile.path(percentEncoded: false)]
         if ProcessInfo.processInfo.environment["GITHUB_ACTIONS"] == "true" {
             arguments += ["--format", "github"]
@@ -53,10 +52,27 @@ private struct CheckCommand {
                 displayName: "Snagless \(name)",
                 executable: tool,
                 arguments: arguments,
-                inputFiles: inputFiles + [graphFile],
+                inputFiles: [graphFile, fingerprintFile],
                 outputFiles: stamp.map { [$0] } ?? [],
             )
         ]
+    }
+
+    private static func write(_ data: Data, to file: URL) throws {
+        if (try? Data(contentsOf: file)) != data {
+            try data.write(to: file, options: .atomic)
+        }
+    }
+
+    private func fingerprint(of files: [URL]) -> Data {
+        let lines = files.map { file in
+            let path = file.path(percentEncoded: false)
+            let attributes = try? FileManager.default.attributesOfItem(atPath: path)
+            let modified = (attributes?[.modificationDate] as? Date)?.timeIntervalSinceReferenceDate
+            let size = attributes?[.size] as? Int
+            return "\(path)\t\(modified.map { "\($0)" } ?? "missing")\t\(size.map { "\($0)" } ?? "missing")\n"
+        }
+        return Data(lines.joined().utf8)
     }
 
     private var inputFiles: [URL] {
